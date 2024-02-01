@@ -27,6 +27,9 @@ public class LexerTests {
                 Arguments.of("Leading Hyphen 2", "-123five", false),
                 Arguments.of("Tony 1", "@@", false),
                 Arguments.of("Tony 2", "@", true),
+                Arguments.of("Shreyas 1", "a", true),
+                Arguments.of("Shreyas 2", "a-b-c", true),
+                Arguments.of("Shreyas 3", "___", false),
                 Arguments.of("Tony 3", "abcdefghijklmnopqrstuvwxyz\n\u0008", false),
                 Arguments.of("Tony 4", "@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_--_-_-___--__-_", true),
                 Arguments.of("Tony 5", "\b", false),
@@ -54,6 +57,7 @@ public class LexerTests {
                 Arguments.of("Tony 3", "-1", true),
                 Arguments.of("Tony 4", "-0", false),
                 Arguments.of("Tony 5", "1234567890", true),
+                Arguments.of("Comma", "1,234,567,890", false),
                 Arguments.of("Tony 6", "69", true),
                 Arguments.of("Tony 7", "34", true),
                 Arguments.of("Tony 8", "--00", false),
@@ -74,13 +78,13 @@ public class LexerTests {
     }
     private static Stream<Arguments> testDecimal() {
         return Stream.of(
+                Arguments.of("Negative Decimal", "-0.1", true),
                 Arguments.of("Multiple Digits", "123.456", true),
                 Arguments.of("Negative Decimal", "-1.0", true),
                 Arguments.of("Trailing Decimal", "1.", false),
                 Arguments.of("Leading Decimal", ".5", false),
                 Arguments.of("Decimal", "1.1", true),
                 Arguments.of("Decimal V2", "0.12345", true),
-                Arguments.of("Negative Decimal", "-0.1", true),
                 Arguments.of("No Leading Zero", ".5", false)
         );
     }
@@ -91,9 +95,22 @@ public class LexerTests {
     }
     private static Stream<Arguments> testCharacter() {
         return Stream.of(
+                Arguments.of("LF", "'\n'", false),
+                Arguments.of("CR", "'\r'", false),
+                Arguments.of("BB", "'\\'", false),
+                Arguments.of("Apostrophe", "'''", false),
+                Arguments.of("Unterminated Char", "'", false),
                 Arguments.of("Alphabetic", "\'c\'", true),
-                Arguments.of("Newline Escape", "\'\\n\'", true),
-                Arguments.of("Unicode", "\'\u0008'", true),
+                Arguments.of("Escape", "\'\\b\'", true),
+                Arguments.of("Escape 1", "\'\\n\'", true),
+                Arguments.of("Escape 2", "\'\\r\'", true),
+                Arguments.of("Escape 3", "\'\\t\'", true),
+                Arguments.of("Escape 4", "\'\\f\'", true),
+                Arguments.of("Unicode", "\'\u000b'", true),
+                Arguments.of("Unicode", "\'\u000c'", true),
+                Arguments.of("Special", "'@'", true),
+                Arguments.of("Special 1", "'.'", true),
+                Arguments.of("Special 2", "'!'", true),
                 Arguments.of("Empty", "\'\'", false),
                 Arguments.of("Multiple", "\'abc\'", false)
         );
@@ -107,6 +124,10 @@ public class LexerTests {
         return Stream.of(
                 // Matching Cases
                 Arguments.of("Empty", "\"\"", true),
+                Arguments.of("NL", "\"\n\"", false),
+                Arguments.of("CR", "\"\r\"", false),
+                Arguments.of("BB", "\"\\\"", false),
+                Arguments.of("Special Characters", "\"!@#$%^&*()\"", true),
                 Arguments.of("Alphabetic", "\"abc\"", true),
                 Arguments.of("Newline Escape", "\"Hello,\\nWorld\"", true),
                 Arguments.of("Empty String", "\"\"", true),

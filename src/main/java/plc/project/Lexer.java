@@ -75,8 +75,15 @@ public final class Lexer {
         return chars.emit(Token.Type.IDENTIFIER); //TODO
     }
     public Token lexNumber() {
-        if (match("-") && !match("[1-9]")) {
-            throw new ParseException("Invalid Number", chars.index);
+        if (match("-")) {
+            if (peek("[1-9]")){
+                chars.advance();
+            }
+            else if (peek("0", ".")){
+                chars.advance();
+            }else{
+                throw new ParseException("Invalid Number", chars.index);
+            }
         }
         if (peek("0", "[0-9]")) {
             throw new ParseException("Invalid Number", chars.index);
@@ -98,7 +105,7 @@ public final class Lexer {
     }
     public Token lexCharacter() {
         match("'");
-        if (peek("\n\r\b\t")) {
+        if (peek("[\n\r\b\t\0]")) {
             throw new ParseException("Invalid character", chars.index);
         }
         else if (match("\\\\")) {
@@ -108,13 +115,15 @@ public final class Lexer {
         } else {
             chars.advance();
         }
-        match("'");
+        if (!match("'")){
+            throw new ParseException("Invalid character", chars.index);
+        }
         return chars.emit(Token.Type.CHARACTER); //TODO
     }
     public Token lexString() {
         match("\"");
         while (!peek("\"") && chars.has(0)) {
-            if (peek("[\n\r]")) {
+            if (peek("[\n\r\b\t\0]")) {
                 throw new ParseException("Unterminated string", chars.index);
             }
             if (match("\\\\")) {
@@ -129,12 +138,15 @@ public final class Lexer {
         return chars.emit(Token.Type.STRING); //TODO
     }
     public void lexEscape() {
-        if(!match("[bnrt'\"\\\\]")){
+        if(!match("[bnrtf'\"\\\\]")){
             throw new ParseException("Invalid Escape Character", chars.index);
         }; //TODO
     }
     public Token lexOperator() {
-        if (peek("!= ", "&|")) {
+        if (peek("[^ \t\b\n\r]") || peek("&", "&")
+                || peek("|", "|")|| peek("!", "=")
+                || peek("=", "=")
+        ) {
             chars.advance();
             return chars.emit(Token.Type.OPERATOR);
         } else {
