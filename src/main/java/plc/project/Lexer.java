@@ -55,7 +55,7 @@ public final class Lexer {
     public Token lexToken() {
         if (peek("[@A-Za-z]")) {
             return lexIdentifier();
-        } else if (peek("[1-9]") || peek("-") || peek("0", "\\.")) {
+        } if (peek("[1-9]") || peek("-") || peek("0", "\\.") || peek("0")) {
             return lexNumber();
         } else if (peek("'")) {
             return lexCharacter();
@@ -66,17 +66,21 @@ public final class Lexer {
         }  //TODO
     }
     public Token lexIdentifier() {
-        if (match("@")) {
-            chars.advance();
-        }
+        match("@");
         while (peek("[A-Za-z0-9_-]")) {
             chars.advance();
         }
-
+        if (peek("@"))
+            throw new ParseException("Multiple @s in Identifier", chars.index);
         return chars.emit(Token.Type.IDENTIFIER); //TODO
     }
     public Token lexNumber() {
-        boolean negative = match("-");
+        if (match("-") && !match("[1-9]")) {
+            throw new ParseException("Invalid Number", chars.index);
+        }
+        if (peek("0", "[0-9]")) {
+            throw new ParseException("Invalid Number", chars.index);
+        }
         while (peek("[0-9]")) {
             chars.advance();
         }
@@ -89,18 +93,17 @@ public final class Lexer {
                 chars.advance();
             }
             return chars.emit(Token.Type.DECIMAL);
-        } else {
-            return chars.emit(Token.Type.INTEGER);
-        } //TODO
+        }
+        return chars.emit(Token.Type.INTEGER);
     }
     public Token lexCharacter() {
         match("'");
-        if (peek("\n\r")) {
+        if (peek("\n\r\b\t")) {
             throw new ParseException("Invalid character", chars.index);
         }
-        if (match("\\")) {
+        else if (match("\\\\")) {
             lexEscape();
-        } else if (peek("\'")) {
+        } else if (peek("'")) {
             throw new ParseException("Invalid character", chars.index);
         } else {
             chars.advance();
@@ -111,20 +114,24 @@ public final class Lexer {
     public Token lexString() {
         match("\"");
         while (!peek("\"") && chars.has(0)) {
-            if (peek("\n\r")) {
+            if (peek("[\n\r]")) {
                 throw new ParseException("Unterminated string", chars.index);
             }
-            if (match("\\")) {
+            if (match("\\\\")) {
                 lexEscape();
             } else {
                 chars.advance();
             }
         }
-        match("\"");
+        if (!match("\"")) {
+            throw new ParseException("Unterminated string", chars.index);
+        };
         return chars.emit(Token.Type.STRING); //TODO
     }
     public void lexEscape() {
-        match("bnrt'\"\\"); //TODO
+        if(!match("[bnrt'\"\\\\]")){
+            throw new ParseException("Invalid Escape Character", chars.index);
+        }; //TODO
     }
     public Token lexOperator() {
         if (peek("!= ", "&|")) {
