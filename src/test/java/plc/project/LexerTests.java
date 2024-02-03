@@ -303,4 +303,56 @@ public class LexerTests {
             Assertions.assertFalse(success, e.getMessage());
         }
     }
+    @ParameterizedTest
+    @MethodSource
+    void testWhitespace(String test, String input, List<Token> expected, boolean success) {
+        test(input, expected, success);
+    }
+
+    private static Stream<Arguments> testWhitespace() {
+        return Stream.of(
+                Arguments.of("Multiple Spaces", "one    two", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 7)
+                ), true),
+
+                Arguments.of("Trailing Newline", "token\n", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "token", 0)
+                ), true),
+
+                Arguments.of("Not Whitespace", "one\ttwo", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
+                ), true)
+        );
+    }
+
+    // Mixed Token tests
+    @ParameterizedTest
+    @MethodSource
+    void testMixedToken(String test, String input, List<Token> expected, boolean success) {
+        test(input, expected, success);
+    }
+
+    private static Stream<Arguments> testMixedToken() {
+        return Stream.of(
+                Arguments.of("Multiple Decimals", "1.2.3", Arrays.asList(
+                        new Token(Token.Type.DECIMAL, "1.2", 0),
+                        new Token(Token.Type.DECIMAL, ".3", 3)
+                ), false),
+
+                Arguments.of("Equals Combinations", "!=====", Arrays.asList(
+                        new Token(Token.Type.OPERATOR, "!=", 0),
+                        new Token(Token.Type.OPERATOR, "==", 2),
+                        new Token(Token.Type.OPERATOR, "==", 4)
+                ), true),
+
+                Arguments.of("Weird Quotes", "\'\"\'string\"'\" ", Arrays.asList(
+                        new Token(Token.Type.CHARACTER, "\'\"\'", 0),
+                        new Token(Token.Type.IDENTIFIER, "string", 3),
+                        new Token(Token.Type.STRING, "\"'\"", 9)
+                ), true)
+        );
+    }
 }
+
