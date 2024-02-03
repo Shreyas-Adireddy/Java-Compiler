@@ -28,10 +28,11 @@ public final class Lexer {
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<>();
         while (chars.has(0)) {
-            if (!peek(" \b\n\r\t")) {  // Skip whitespace
+            if (!peek("[ \b\n\r\t]")) {  // Skip whitespace
                 tokens.add(lexToken());
             } else {
                 chars.advance();
+                chars.skip();
             }
         }
         return tokens; //TODO
@@ -79,7 +80,7 @@ public final class Lexer {
             if (peek("[1-9]")){
                 chars.advance();
             }
-            else if (peek("0", ".")){
+            else if (peek("0", "\\.")){
                 chars.advance();
             }else{
                 throw new ParseException("Invalid Number", chars.index);
@@ -91,7 +92,7 @@ public final class Lexer {
         while (peek("[0-9]")) {
             chars.advance();
         }
-        if (peek(".")) {
+        if (peek("\\.")) {
             chars.advance();
             if (!peek("[0-9]")){
                 throw new ParseException("Invalid character", chars.index);
@@ -143,10 +144,14 @@ public final class Lexer {
         }; //TODO
     }
     public Token lexOperator() {
-        if (peek("[^ \t\b\n\r]") || peek("&", "&")
-                || peek("|", "|")|| peek("!", "=")
-                || peek("=", "=")
-        ) {
+        if (peek("[^ \t\b\n\r]")) {
+            if (match("!") || match("=")) {
+                match("=");
+                return chars.emit(Token.Type.OPERATOR);
+            }
+            if (match("&", "&") || match("\\|", "\\|")) {
+                return chars.emit(Token.Type.OPERATOR);
+            }
             chars.advance();
             return chars.emit(Token.Type.OPERATOR);
         } else {
