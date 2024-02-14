@@ -1,6 +1,9 @@
 package plc.project;
 
+import javax.swing.text.html.Option;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -84,6 +87,23 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
+        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+        if (peek("LET")) throw new ParseException("Invalid Token", 0);      // TODO p2b
+        if (peek("SWITCH")) throw new ParseException("Invalid Token", 0);   // TODO p2b
+        if (peek("IF")) throw new ParseException("Invalid Token", 0);       // TODO p2b
+        if (peek("WHILE")) throw new ParseException("Invalid Token", 0);    // TODO p2b
+        if (peek("RETURN")) throw new ParseException("Invalid Token", 0);   // TODO p2b
+
+        Ast.Expression expr1 = parseExpression();
+
+        if (match(";")) return new Ast.Statement.Expression(expr1);
+
+        if (match("=") && tokens.has(0)) {
+            Ast.Expression expr2 = parseExpression();
+            if (match(";")) return new Ast.Statement.Assignment(expr1, expr2);
+        }
+
+
         throw new UnsupportedOperationException(); //TODO
     }
 
@@ -145,35 +165,92 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expression parseExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (tokens.has(0)) return parseLogicalExpression();
+        throw new ParseException("Dude there's no tokens!", 0);
     }
 
     /**
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+
+        Ast.Expression[] expr = {parseComparisonExpression(), null};
+
+        if (!tokens.has(0)) return expr[0];
+
+        int ind = 1;
+
+        while (peek("&&") || peek("||"))
+        {
+            String op = tokens.get(0).getLiteral();
+            tokens.advance();
+            expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseComparisonExpression());
+        }
+
+        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
     }
 
     /**
      * Parses the {@code comparison-expression} rule.
      */
     public Ast.Expression parseComparisonExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+
+        Ast.Expression[] expr = {parseAdditiveExpression(), null};
+
+
+        int ind = 1;
+        while (peek("<") || peek(">") || peek("==") || peek("!="))
+        {
+            String op = tokens.get(0).getLiteral();
+            tokens.advance();
+            expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseAdditiveExpression());
+        }
+
+        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
     }
 
     /**
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+
+        Ast.Expression[] expr = {parseMultiplicativeExpression(), null};
+
+        int ind = 1;
+        while (peek("+") || peek("-"))
+        {
+            String op = tokens.get(0).getLiteral();
+            tokens.advance();
+            expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseMultiplicativeExpression());
+        }
+
+
+        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
+
     }
 
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+
+        Ast.Expression[] expr = {parsePrimaryExpression(), null};
+
+        int ind = 1;
+
+        while (peek("*") || peek("/") || peek("^"))
+        {
+            String op = tokens.get(0).getLiteral();
+            tokens.advance();
+            expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parsePrimaryExpression());
+        }
+
+
+        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
     }
 
     /**
@@ -183,7 +260,41 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expression parsePrimaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (!tokens.has(0))       throw new ParseException("Dude there's no tokens!", 0);
+        if (peek(Token.Type.INTEGER))   return new Ast.Expression.Literal(tokens.get(0));
+        if (peek(Token.Type.DECIMAL))   return new Ast.Expression.Literal(tokens.get(0));
+        if (peek(Token.Type.CHARACTER)) return new Ast.Expression.Literal(tokens.get(0));
+        if (peek(Token.Type.STRING))    return new Ast.Expression.Literal(tokens.get(0));
+        if (peek("NIL"))       return new Ast.Expression.Literal(tokens.get(0));
+        if (peek("TRUE"))      return new Ast.Expression.Literal(tokens.get(0));
+        if (peek("FALSE"))     return new Ast.Expression.Literal(tokens.get(0));
+        if (match("(") && tokens.has(0)) {
+            Ast.Expression expr = parseExpression();
+            if (match(")"))    return new Ast.Expression.Group(expr);
+        }
+
+        if (!peek(Token.Type.IDENTIFIER)) throw new UnsupportedOperationException(); //TODO
+
+        String id = tokens.get(0).getLiteral();
+        tokens.advance();
+
+        if (match("(", ")"))   return new Ast.Expression.Function(id, Arrays.asList());
+
+        if (match("(") && tokens.has(0)) {
+            List<Ast.Expression> exprArr = Arrays.asList();
+            exprArr.add(parseExpression());
+
+            while (match(",")) exprArr.add(parseExpression());
+
+            if (match(")"))    return new Ast.Expression.Function(id, exprArr);
+        }
+
+        if (match("[") && tokens.has(0)) {
+            Ast.Expression expr = parseExpression();
+            if (match("]"))    return new Ast.Expression.Access(Optional.of(expr), id);
+        }
+
+        return new Ast.Expression.Access(Optional.empty(), id);
     }
 
     /**
@@ -266,3 +377,4 @@ public final class Parser {
     }
 
 }
+
