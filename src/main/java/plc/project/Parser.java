@@ -4,6 +4,8 @@ import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigInteger;
+import java.math.BigDecimal;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -261,16 +263,25 @@ public final class Parser {
      */
     public Ast.Expression parsePrimaryExpression() throws ParseException {
         if (!tokens.has(0))       throw new ParseException("Dude there's no tokens!", 0);
-        if (peek(Token.Type.INTEGER))   return new Ast.Expression.Literal(tokens.get(0));
-        if (peek(Token.Type.DECIMAL))   return new Ast.Expression.Literal(tokens.get(0));
-        if (peek(Token.Type.CHARACTER)) return new Ast.Expression.Literal(tokens.get(0));
-        if (peek(Token.Type.STRING))    return new Ast.Expression.Literal(tokens.get(0));
-        if (peek("NIL"))       return new Ast.Expression.Literal(tokens.get(0));
-        if (peek("TRUE"))      return new Ast.Expression.Literal(tokens.get(0));
-        if (peek("FALSE"))     return new Ast.Expression.Literal(tokens.get(0));
+        if (peek(Token.Type.INTEGER))   return new Ast.Expression.Literal(new BigInteger(tokens.get(0).getLiteral()));
+        if (peek(Token.Type.DECIMAL))   return new Ast.Expression.Literal(new BigDecimal(tokens.get(0).getLiteral()));
+        if (peek(Token.Type.CHARACTER)) {
+            String con = tokens.get(0).getLiteral();
+            con = con.substring(1, con.length()-1).replace("\\n","\n");
+            return new Ast.Expression.Literal(con.charAt(0));
+        }
+        if (peek(Token.Type.STRING))    {
+            String con = tokens.get(0).getLiteral();
+            con = con.substring(1, con.length()-1).replace("\\n","\n");
+            return new Ast.Expression.Literal(con);
+        }
+        if (peek("NIL"))       return new Ast.Expression.Literal(null);
+        if (peek("TRUE"))      return new Ast.Expression.Literal(true);
+        if (peek("FALSE"))     return new Ast.Expression.Literal(false);
         if (match("(") && tokens.has(0)) {
             Ast.Expression expr = parseExpression();
             if (match(")"))    return new Ast.Expression.Group(expr);
+            else throw new ParseException("Invalid Token", tokens.index);
         }
 
         if (!peek(Token.Type.IDENTIFIER)) throw new UnsupportedOperationException(); //TODO
@@ -287,11 +298,13 @@ public final class Parser {
             while (match(",")) exprArr.add(parseExpression());
 
             if (match(")"))    return new Ast.Expression.Function(id, exprArr);
+            else throw new ParseException("Invalid Token", tokens.index);
         }
 
         if (match("[") && tokens.has(0)) {
             Ast.Expression expr = parseExpression();
             if (match("]"))    return new Ast.Expression.Access(Optional.of(expr), id);
+            else throw new ParseException("Invalid Token", tokens.index);
         }
 
         return new Ast.Expression.Access(Optional.empty(), id);
