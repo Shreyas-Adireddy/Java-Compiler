@@ -142,7 +142,7 @@ public class LexerTests {
                 Arguments.of("Working Escape Character 7", "\"1\\\\2\"", true),
                 Arguments.of("Working Escape Characters", "\"\\\\\\b\\t\\'\\\"\\\\WOAH\\\\\\b\\n\\r\\t\\'\\\"\\\\\"", true),
                 // Non-matching Cases
-                Arguments.of("Unterminated", "\"unt", false),
+                Arguments.of("Unterminated", "\"unt  ", false),
                 Arguments.of("Invalid Escape", "\"invalid\\escape\"", false),
                 Arguments.of("Not Closed Right", "\"unterminated", false),
                 Arguments.of("Not Closed Left", "unterminated\"", false),

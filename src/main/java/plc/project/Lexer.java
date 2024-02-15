@@ -124,7 +124,7 @@ public final class Lexer {
     public Token lexString() {
         match("\"");
         while (!peek("\"") && chars.has(0)) {
-            if (peek("[\n\r\b\t\0]")) {
+            if (peek("[\n\r\0]")) {
                 throw new ParseException("Unterminated string", chars.index);
             }
             if (match("\\\\")) {
