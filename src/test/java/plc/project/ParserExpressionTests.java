@@ -133,15 +133,6 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testGroupExpression() {
         return Stream.of(
-                Arguments.of("Grouped Variable",
-                        Arrays.asList(
-                                //(expr)
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr", 1),
-                                new Token(Token.Type.OPERATOR, ")", 5)
-                        ),
-                        new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
-                ),
                 Arguments.of("Grouped Binary",
                         Arrays.asList(
                                 //(expr1 + expr2)
@@ -155,6 +146,15 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
                         ))
+                ),
+                Arguments.of("Grouped Variable",
+                        Arrays.asList(
+                                //(expr)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 1),
+                                new Token(Token.Type.OPERATOR, ")", 5)
+                        ),
+                        new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
                 )
         );
     }
@@ -251,15 +251,6 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testFunctionExpression() {
         return Stream.of(
-                Arguments.of("Zero Arguments",
-                        Arrays.asList(
-                                //name()
-                                new Token(Token.Type.IDENTIFIER, "name", 0),
-                                new Token(Token.Type.OPERATOR, "(", 4),
-                                new Token(Token.Type.OPERATOR, ")", 5)
-                        ),
-                        new Ast.Expression.Function("name", Arrays.asList())
-                ),
                 Arguments.of("Multiple Arguments",
                         Arrays.asList(
                                 //name(expr1, expr2, expr3)
@@ -277,13 +268,22 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr2"),
                                 new Ast.Expression.Access(Optional.empty(), "expr3")
                         ))
+                ),
+                Arguments.of("Zero Arguments",
+                        Arrays.asList(
+                                //name()
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.OPERATOR, ")", 5)
+                        ),
+                        new Ast.Expression.Function("name", Arrays.asList())
                 )
         );
     }
     @ParameterizedTest
     @MethodSource
     void testScenarioParseException(String test, List<Token> tokens, ParseException exception) {
-        testParseException(tokens, exception, Parser::parseExpression);
+        testParseException(tokens, exception, Parser::parseExpression); // SHREYAS IGNORE THESE TESTS FOR NOW
     }
     private static Stream<Arguments> testScenarioParseException() {
         return Stream.of(

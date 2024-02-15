@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.math.BigInteger;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -192,7 +193,7 @@ public final class Parser {
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseComparisonExpression());
         }
 
-        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
+        return expr[1] == null ? expr[0] : expr[++ind % 2];
     }
 
     /**
@@ -203,7 +204,6 @@ public final class Parser {
 
         Ast.Expression[] expr = {parseAdditiveExpression(), null};
 
-
         int ind = 1;
         while (peek("<") || peek(">") || peek("==") || peek("!="))
         {
@@ -213,7 +213,7 @@ public final class Parser {
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseAdditiveExpression());
         }
 
-        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
+        return expr[1] == null ? expr[0] : expr[++ind % 2];
     }
 
     /**
@@ -233,9 +233,7 @@ public final class Parser {
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseMultiplicativeExpression());
         }
 
-
-        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
-
+        return expr[1] == null ? expr[0] : expr[++ind % 2];
     }
 
     /**
@@ -256,8 +254,7 @@ public final class Parser {
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parsePrimaryExpression());
         }
 
-
-        return expr[ind % 2] == null ? expr[0] : expr[ind % 2];
+        return expr[1] == null ? expr[0] : expr[++ind % 2];
     }
 
     /**
@@ -296,8 +293,9 @@ public final class Parser {
 
         if (match("(", ")"))   return new Ast.Expression.Function(id, Arrays.asList());
 
+
         if (match("(") && tokens.has(0)) {
-            List<Ast.Expression> exprArr = Arrays.asList();
+            List<Ast.Expression> exprArr = new ArrayList<>();
             exprArr.add(parseExpression());
 
             while (match(",") && tokens.has(0)) exprArr.add(parseExpression());
