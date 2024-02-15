@@ -45,13 +45,6 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ";", 4)
                         ),
                         new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "expr"))
-                ),
-                Arguments.of("Missing Semicolon",
-                        Arrays.asList(
-                                //f
-                                new Token(Token.Type.IDENTIFIER, "f", 0)
-                        ),
-                        new ParseException("Invalid Token", 1) // TODO this might be wrong
                 )
         );
     }
@@ -89,15 +82,6 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "name"),
                                 new Ast.Expression.Access(Optional.empty(), "expr")
                         )
-                ),
-                Arguments.of("Missing Value",
-                        Arrays.asList(
-                                //name = expr;
-                                new Token(Token.Type.IDENTIFIER, "name", 0),
-                                new Token(Token.Type.OPERATOR, "=", 5),
-                                new Token(Token.Type.OPERATOR, ";", 7)
-                        ),
-                        new ParseException("Invalid Token", 2) // TODO could be wrong
                 )
         );
     }
@@ -149,15 +133,6 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testGroupExpression() {
         return Stream.of(
-                Arguments.of("Missing Closing Parenthesis",
-                        Arrays.asList(
-                                //(expr1
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr1", 1)
-                        ),
-                        new ParseException("Invalid Token", 2) // TODO could be wrong
-                  )
-                 ,
                 Arguments.of("Grouped Variable",
                         Arrays.asList(
                                 //(expr)
@@ -239,14 +214,6 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
                         )
-                ),
-                Arguments.of("Missing Operand",
-                        Arrays.asList(
-                                //expr1 -
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "-", 6)
-                        ),
-                        new ParseException("Invalid Token", 2)
                 )
         );
     }
@@ -310,16 +277,6 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr2"),
                                 new Ast.Expression.Access(Optional.empty(), "expr3")
                         ))
-                ),
-                Arguments.of("Trailing Comma",
-                        Arrays.asList(
-                                //name(expr,)
-                                new Token(Token.Type.IDENTIFIER, "name", 0),
-                                new Token(Token.Type.OPERATOR, "(", 4),
-                                new Token(Token.Type.IDENTIFIER, "expr", 5),
-                                new Token(Token.Type.OPERATOR, ",", 9)
-                        ),
-                        new ParseException("Invalid Token", 4) // TODO could be wrong
                 )
         );
     }
@@ -337,7 +294,48 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, "(", 0),
                                 new Token(Token.Type.IDENTIFIER, "expr", 1)
                         ),
-                        new ParseException("Expected closing parenthesis `)`.", 5)
+                        new ParseException("Invalid Token", 5)
+                ),
+                Arguments.of("Trailing Comma",
+                        Arrays.asList(
+                                //name(expr,)
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.IDENTIFIER, "expr", 5),
+                                new Token(Token.Type.OPERATOR, ",", 9)
+                        ),
+                        new ParseException("Invalid Token", 4) // TODO could be wrong
+                ),
+                Arguments.of("Missing Semicolon",
+                        Arrays.asList(
+                                //f
+                                new Token(Token.Type.IDENTIFIER, "f", 0)
+                        ),
+                        new ParseException("Invalid Token", 1) // TODO this might be wrong
+                ),
+                Arguments.of("Missing Value",
+                        Arrays.asList(
+                                //name = expr;
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.OPERATOR, ";", 7)
+                        ),
+                        new ParseException("Invalid Token", 2) // TODO could be wrong
+                ),                Arguments.of("Missing Closing Parenthesis",
+                        Arrays.asList(
+                                //(expr1
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 1)
+                        ),
+                        new ParseException("Invalid Token", 2) // TODO could be wrong
+                ),
+                Arguments.of("Missing Operand",
+                        Arrays.asList(
+                                //expr1 -
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "-", 6)
+                        ),
+                        new ParseException("Invalid Token", 2)
                 )
         );
     }

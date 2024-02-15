@@ -103,10 +103,11 @@ public final class Parser {
         if (match("=") && tokens.has(0)) {
             Ast.Expression expr2 = parseExpression();
             if (match(";")) return new Ast.Statement.Assignment(expr1, expr2);
+            else throw new ParseException("Invalid Token", tokens.index);
         }
 
 
-        throw new UnsupportedOperationException(); //TODO
+        throw new ParseException("Invalid Token", tokens.index);
     }
 
     /**
@@ -187,6 +188,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
+            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseComparisonExpression());
         }
 
@@ -207,6 +209,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
+            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseAdditiveExpression());
         }
 
@@ -226,6 +229,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
+            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseMultiplicativeExpression());
         }
 
@@ -248,6 +252,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
+            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parsePrimaryExpression());
         }
 
@@ -284,7 +289,7 @@ public final class Parser {
             else throw new ParseException("Invalid Token", tokens.index);
         }
 
-        if (!peek(Token.Type.IDENTIFIER)) throw new UnsupportedOperationException(); //TODO
+        if (!peek(Token.Type.IDENTIFIER)) throw new ParseException("Invalid Token", tokens.index); //TODO
 
         String id = tokens.get(0).getLiteral();
         tokens.advance();
@@ -295,7 +300,7 @@ public final class Parser {
             List<Ast.Expression> exprArr = Arrays.asList();
             exprArr.add(parseExpression());
 
-            while (match(",")) exprArr.add(parseExpression());
+            while (match(",") && tokens.has(0)) exprArr.add(parseExpression());
 
             if (match(")"))    return new Ast.Expression.Function(id, exprArr);
             else throw new ParseException("Invalid Token", tokens.index);
