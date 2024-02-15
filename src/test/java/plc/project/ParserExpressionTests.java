@@ -97,7 +97,7 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, "=", 5),
                                 new Token(Token.Type.OPERATOR, ";", 7)
                         ),
-                        new ParseException("Invalid Token", 7) // TODO could be wrong
+                        new ParseException("Invalid Token", 2) // TODO could be wrong
                 )
         );
     }
@@ -149,6 +149,15 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testGroupExpression() {
         return Stream.of(
+                Arguments.of("Missing Closing Parenthesis",
+                        Arrays.asList(
+                                //(expr1
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 1)
+                        ),
+                        new ParseException("Invalid Token", 2) // TODO could be wrong
+                  )
+                 ,
                 Arguments.of("Grouped Variable",
                         Arrays.asList(
                                 //(expr)
@@ -171,14 +180,6 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
                         ))
-                ),
-                Arguments.of("Missing Closing Parenthesis",
-                        Arrays.asList(
-                                //(expr1
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr1", 1)
-                        ),
-                        new ParseException("Invalid Token", 6) // TODO could be wrong
                 )
         );
     }
@@ -245,7 +246,7 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
                                 new Token(Token.Type.OPERATOR, "-", 6)
                         ),
-                        new ParseException("Invalid Token", 7)
+                        new ParseException("Invalid Token", 2)
                 )
         );
     }
@@ -318,7 +319,25 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr", 5),
                                 new Token(Token.Type.OPERATOR, ",", 9)
                         ),
-                        new ParseException("Invalid Token", 10) // TODO could be wrong
+                        new ParseException("Invalid Token", 4) // TODO could be wrong
+                )
+        );
+    }
+    @ParameterizedTest
+    @MethodSource
+    void testScenarioParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseExpression);
+    }
+    private static Stream<Arguments> testScenarioParseException() {
+        return Stream.of(
+                Arguments.of("Missing Closing Parenthesis",
+                        Arrays.asList(
+                                //012345
+                                //(expr
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 1)
+                        ),
+                        new ParseException("Expected closing parenthesis `)`.", 5)
                 )
         );
     }
@@ -334,6 +353,12 @@ final class ParserExpressionTests {
         } else {
             Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
         }
+    }
+
+    private static <T extends Ast> void testParseException(List<Token> tokens, Exception exception, Function<Parser, T> function) {
+        Parser parser = new Parser(tokens);
+        ParseException pe = Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
+        Assertions.assertEquals(exception, pe);
     }
 
 }
