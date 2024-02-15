@@ -1,7 +1,6 @@
 package plc.project;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -282,10 +281,10 @@ final class ParserExpressionTests {
     }
     @ParameterizedTest
     @MethodSource
-    void testScenarioParseException(String test, List<Token> tokens, ParseException exception) {
+    void testExpressionParseException(String test, List<Token> tokens, ParseException exception) {
         testParseException(tokens, exception, Parser::parseExpression); // SHREYAS IGNORE THESE TESTS FOR NOW
     }
-    private static Stream<Arguments> testScenarioParseException() {
+    private static Stream<Arguments> testExpressionParseException() {
         return Stream.of(
                 Arguments.of("Missing Closing Parenthesis",
                         Arrays.asList(
@@ -306,6 +305,32 @@ final class ParserExpressionTests {
                         ),
                         new ParseException("Invalid Token", 4) // TODO could be wrong
                 ),
+                Arguments.of("Missing Closing Parenthesis",
+                        Arrays.asList(
+                                //(expr1
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 1)
+                        ),
+                        new ParseException("Invalid Token", 2) // TODO could be wrong
+                ),
+                Arguments.of("Missing Operand",
+                        Arrays.asList(
+                                //expr1 -
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "-", 6)
+                        ),
+                        new ParseException("Invalid Token", 2)
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testStatementParseException(String test, List<Token> tokens, ParseException exception) {
+        testParseException(tokens, exception, Parser::parseStatement); // SHREYAS IGNORE THESE TESTS FOR NOW
+    }
+    private static Stream<Arguments> testStatementParseException() {
+        return Stream.of(
                 Arguments.of("Missing Semicolon",
                         Arrays.asList(
                                 //f
@@ -321,21 +346,6 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ";", 7)
                         ),
                         new ParseException("Invalid Token", 2) // TODO could be wrong
-                ),                Arguments.of("Missing Closing Parenthesis",
-                        Arrays.asList(
-                                //(expr1
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr1", 1)
-                        ),
-                        new ParseException("Invalid Token", 2) // TODO could be wrong
-                ),
-                Arguments.of("Missing Operand",
-                        Arrays.asList(
-                                //expr1 -
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "-", 6)
-                        ),
-                        new ParseException("Invalid Token", 2)
                 )
         );
     }

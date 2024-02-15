@@ -90,7 +90,7 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
-        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+        if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
         if (peek("LET")) throw new ParseException("Invalid Token", 0);      // TODO p2b
         if (peek("SWITCH")) throw new ParseException("Invalid Token", 0);   // TODO p2b
         if (peek("IF")) throw new ParseException("Invalid Token", 0);       // TODO p2b
@@ -170,14 +170,14 @@ public final class Parser {
      */
     public Ast.Expression parseExpression() throws ParseException {
         if (tokens.has(0)) return parseLogicalExpression();
-        throw new ParseException("Dude there's no tokens!", 0);
+        throw new ParseException("Invalid Token", 0);
     }
 
     /**
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+        if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
 
         Ast.Expression[] expr = {parseComparisonExpression(), null};
 
@@ -189,7 +189,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
-            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+            if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseComparisonExpression());
         }
 
@@ -200,7 +200,7 @@ public final class Parser {
      * Parses the {@code comparison-expression} rule.
      */
     public Ast.Expression parseComparisonExpression() throws ParseException {
-        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+        if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
 
         Ast.Expression[] expr = {parseAdditiveExpression(), null};
 
@@ -209,7 +209,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
-            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+            if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseAdditiveExpression());
         }
 
@@ -220,7 +220,7 @@ public final class Parser {
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+        if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
 
         Ast.Expression[] expr = {parseMultiplicativeExpression(), null};
 
@@ -229,7 +229,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
-            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+            if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parseMultiplicativeExpression());
         }
 
@@ -240,7 +240,7 @@ public final class Parser {
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
-        if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+        if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
 
         Ast.Expression[] expr = {parsePrimaryExpression(), null};
 
@@ -250,7 +250,7 @@ public final class Parser {
         {
             String op = tokens.get(0).getLiteral();
             tokens.advance();
-            if (!tokens.has(0)) throw new ParseException("Dude there's no tokens!", 0);
+            if (!tokens.has(0)) throw new ParseException("Invalid Token", 0);
             expr[ind % 2] = new Ast.Expression.Binary(op, expr[++ind % 2], parsePrimaryExpression());
         }
 
@@ -264,7 +264,7 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expression parsePrimaryExpression() throws ParseException {
-        if (!tokens.has(0))       throw new ParseException("Dude there's no tokens!", 0);
+        if (!tokens.has(0))       throw new ParseException("Invalid Token", 0);
         if (peek(Token.Type.INTEGER))   return new Ast.Expression.Literal(new BigInteger(tokens.get(0).getLiteral()));
         if (peek(Token.Type.DECIMAL))   return new Ast.Expression.Literal(new BigDecimal(tokens.get(0).getLiteral()));
         if (peek(Token.Type.CHARACTER)) {
