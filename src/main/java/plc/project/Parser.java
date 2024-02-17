@@ -33,7 +33,20 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Global> globals = new ArrayList<>();
+        List<Ast.Function> functions = new ArrayList<>();
+
+        while (tokens.has(0)) {
+            if (peek("LIST") || peek("VAR") || peek("VAL")) {
+                globals.add(parseGlobal());
+            } else if (peek("FUN")) {
+                functions.add(parseFunction());
+            } else {
+                throw new ParseException("Invalid Token", tokens.get(0).getIndex());
+            }
+        }
+
+        return new Ast.Source(globals, functions);
     }
 
     /**
@@ -41,7 +54,15 @@ public final class Parser {
      * next tokens start a global, aka {@code LIST|VAL|VAR}.
      */
     public Ast.Global parseGlobal() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (peek("LIST")) {
+            return parseList();
+        } else if (peek("VAR")) {
+            return parseMutable();
+        } else if (peek("VAL")){
+            return parseImmutable();
+        }else {
+            throw new ParseException("Expected LIST or VAR or VAL", tokens.get(0).getIndex());
+        }
     }
 
     /**
@@ -49,7 +70,26 @@ public final class Parser {
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("LIST");
+        if (!tokens.has(0)){
+            throw new ParseException("Invalid token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+        }if (!peek(Token.Type.IDENTIFIER)){
+            throw new ParseException("Invalid token", tokens.get(0).getIndex());
+        }
+        String name = tokens.get(0).getLiteral();
+        if (!match("=") || !match("[")){
+            throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
+        }
+        List<Ast.Expression> expressions = new ArrayList<>();
+        expressions.add(parseExpression());
+        while (match(",")) {
+            expressions.add(parseExpression());
+        }
+        if (!match("]") || !match(";")){
+            throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
+        }
+        // WHY ERROR
+        return new Ast.Global(name, true, Optional.of(new Ast.Expression.PlcList(expressions)));
     }
 
     /**
