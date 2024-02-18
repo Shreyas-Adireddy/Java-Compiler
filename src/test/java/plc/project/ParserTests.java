@@ -153,6 +153,25 @@ final class ParserTests {
 
     private static Stream<Arguments> testIfStatement() {
         return Stream.of(
+                Arguments.of("Else",
+                        Arrays.asList(
+                                //IF expr DO stmt1; ELSE stmt2; END
+                                new Token(Token.Type.IDENTIFIER, "IF", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 3),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 11),
+                                new Token(Token.Type.OPERATOR, ";", 16),
+                                new Token(Token.Type.IDENTIFIER, "ELSE", 18),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 23),
+                                new Token(Token.Type.OPERATOR, ";", 28),
+                                new Token(Token.Type.IDENTIFIER, "END", 30)
+                        ),
+                        new Ast.Statement.If(
+                                new Ast.Expression.Access(Optional.empty(), "expr"),
+                                Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1"))),
+                                Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt2")))
+                        )
+                ),
                 Arguments.of("If",
                         Arrays.asList(
                                 //IF expr DO stmt; END
