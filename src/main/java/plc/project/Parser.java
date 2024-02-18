@@ -186,7 +186,7 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!match("DO")){
+        if (!peek("DO")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         List<Ast.Statement> body = parseBlock();
@@ -208,16 +208,16 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!match("{")){
+        if (!match("DO")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
-        while (!peek("}")) {
+        while (!peek("END")) {
             statements.add(parseStatement());
         }
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!match("}")){
+        if (!peek("END")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         return statements;
@@ -232,15 +232,15 @@ public final class Parser {
         if (!tokens.has(0))
             throw new ParseException("Dude there's no tokens!", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         if (peek("LET"))
-            parseDeclarationStatement();
+            return parseDeclarationStatement();
         if (peek("SWITCH"))
-            parseSwitchStatement();   // TODO p2b
+            return parseSwitchStatement();   // TODO p2b
         if (peek("IF"))
-            parseIfStatement();       // TODO p2b
+            return parseIfStatement();       // TODO p2b
         if (peek("WHILE"))
-            parseWhileStatement();    // TODO p2b
+            return parseWhileStatement();    // TODO p2b
         if (peek("RETURN"))
-            parseReturnStatement();   // TODO p2b
+            return parseReturnStatement();   // TODO p2b
 
         Ast.Expression expr1 = parseExpression();
 
@@ -299,11 +299,11 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!match("DO")){
+        if (!peek("DO")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         List<Ast.Statement> thenBlock = parseBlock();
-        List<Ast.Statement> elseBlock = null;
+        List<Ast.Statement> elseBlock = new ArrayList<>();
         if (match("ELSE")) {
             elseBlock = parseBlock();
         }
@@ -366,7 +366,7 @@ public final class Parser {
     public Ast.Statement.While parseWhileStatement() throws ParseException {
         match("WHILE");
         Ast.Expression expression = parseExpression();
-        if (!match("DO")){
+        if (!peek("DO")){
             if (tokens.has(0)){
                 throw new ParseException("Invalid Token", tokens.get(0).getIndex());
             }throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
