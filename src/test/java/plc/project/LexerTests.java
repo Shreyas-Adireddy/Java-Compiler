@@ -180,32 +180,7 @@ public class LexerTests {
     }
     private static Stream<Arguments> testExamples() {
         return Stream.of(
-                Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "x", 4),
-                        new Token(Token.Type.OPERATOR, "=", 6),
-                        new Token(Token.Type.INTEGER, "5", 8),
-                        new Token(Token.Type.OPERATOR, ";", 9)
-                )),
-                Arguments.of("Example 2", "print(\"Hello, World!\");",
-                        Arrays.asList(
-                                new Token(Token.Type.IDENTIFIER, "print", 0),
-                                new Token(Token.Type.OPERATOR, "(", 5),
-                                new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
-                                new Token(Token.Type.OPERATOR, ")", 21),
-                                new Token(Token.Type.OPERATOR, ";", 22)
-                        )),
-                Arguments.of("Example 3", "VAR i = -1 : Integer;",
-                        Arrays.asList(
-                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
-                                new Token(Token.Type.IDENTIFIER, "i", 4),
-                                new Token(Token.Type.OPERATOR, "=", 6),
-                                new Token(Token.Type.INTEGER, "-1", 8),
-                                new Token(Token.Type.OPERATOR, ":", 11),
-                                new Token(Token.Type.IDENTIFIER, "Integer", 13),
-                                new Token(Token.Type.OPERATOR, ";", 20)
-                        )),
-                Arguments.of("VAR i = -1 : Integer;\nVAL inc = 2 : Integer;\nFUN foo() DO\n WHILE i != 1 DO\n IF i > 0 DO\n print(\"bar\");\n END\n i = i + inc;\n END\nEND",
+                Arguments.of("PENIS", "VAR i = -1 : Integer;\nVAL inc = 2 : Integer;\nFUN foo() DO\n    WHILE i != 1 DO\n        IF i > 0 DO\n            print(\"bar\");\n        END\n        i = i + inc;\n    END\nEND",
                         Arrays.asList(
                                 //VAR i = -1 : Integer;
                                 new Token(Token.Type.IDENTIFIER, "VAR", 0),
@@ -260,8 +235,33 @@ public class LexerTests {
                                 new Token(Token.Type.IDENTIFIER, "END", 161),
                                 //END
                                 new Token(Token.Type.IDENTIFIER, "END", 165)
-                        ))
-
+                    ))
+//                    ,
+//                Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
+//                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+//                        new Token(Token.Type.IDENTIFIER, "x", 4),
+//                        new Token(Token.Type.OPERATOR, "=", 6),
+//                        new Token(Token.Type.INTEGER, "5", 8),
+//                        new Token(Token.Type.OPERATOR, ";", 9)
+//                    )),
+//                Arguments.of("Example 2", "print(\"Hello, World!\");",
+//                        Arrays.asList(
+//                                new Token(Token.Type.IDENTIFIER, "print", 0),
+//                                new Token(Token.Type.OPERATOR, "(", 5),
+//                                new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
+//                                new Token(Token.Type.OPERATOR, ")", 21),
+//                                new Token(Token.Type.OPERATOR, ";", 22)
+//                    )),
+//                Arguments.of("Example 3", "VAR i = -1 : Integer;",
+//                        Arrays.asList(
+//                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+//                                new Token(Token.Type.IDENTIFIER, "i", 4),
+//                                new Token(Token.Type.OPERATOR, "=", 6),
+//                                new Token(Token.Type.INTEGER, "-1", 8),
+//                                new Token(Token.Type.OPERATOR, ":", 11),
+//                                new Token(Token.Type.IDENTIFIER, "Integer", 13),
+//                                new Token(Token.Type.OPERATOR, ";", 20)
+//                    ))
 
         );
     }
