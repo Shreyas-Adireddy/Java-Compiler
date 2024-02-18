@@ -28,7 +28,7 @@ public final class Lexer {
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<>();
         while (chars.has(0)) {
-            if (!peek("[ \b\n\r\t]")) {  // Skip whitespace
+            if (!peek("[ \b\n\r\t\f\u000B]")) {  // Skip whitespace
                 tokens.add(lexToken());
             } else {
                 chars.advance();
@@ -56,7 +56,7 @@ public final class Lexer {
     public Token lexToken() {
         if (match("[@A-Za-z]")) {
             return lexIdentifier();
-        } if (peek("0|-|[1-9]") || peek("0", "\\.")) {
+        } if (peek("0|[1-9]") || peek("0", "\\.") || peek("-", "0|[1-9]")) {
             return lexNumber();
         } else if (match("'")) {
             return lexCharacter();
@@ -91,6 +91,8 @@ public final class Lexer {
             chars.advance();
         }
         if (peek("\\.")) {
+            if (peek("\\.", "[^0-9]"))
+                return chars.emit(Token.Type.INTEGER);
             chars.advance();
             if (!peek("[0-9]")){
                 throw new ParseException("Invalid character", chars.index);
@@ -103,13 +105,11 @@ public final class Lexer {
         return chars.emit(Token.Type.INTEGER);
     }
     public Token lexCharacter() {
-        if (peek("[\n\r\b\t\0]")) {
+        if (peek("[\n\r\b\t\0']")) {
             throw new ParseException("Invalid character", chars.index);
         }
         else if (match("\\\\")) {
             lexEscape();
-        } else if (peek("'")) {
-            throw new ParseException("Invalid character", chars.index);
         } else {
             chars.advance();
         }
@@ -122,7 +122,7 @@ public final class Lexer {
     public Token lexString() {
         match("\"");
         while (!peek("\"") && chars.has(0)) {
-            if (peek("[\n\r\0]")) {
+            if (peek("[\n\r]")) {
                 throw new ParseException("Unterminated string", chars.index);
             }
             if (match("\\\\")) {
