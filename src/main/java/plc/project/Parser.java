@@ -53,11 +53,11 @@ public final class Parser {
      * next tokens start a global, aka {@code LIST|VAL|VAR}.
      */
     public Ast.Global parseGlobal() throws ParseException {
-        if (peek("LIST")) {
+        if (match("LIST")) {
             return parseList();
-        } else if (peek("VAR")) {
+        } else if (match("VAR")) {
             return parseMutable();
-        } else if (peek("VAL")){
+        } else if (match("VAL")){
             return parseImmutable();
         }else {
             throw new ParseException("Expected LIST or VAR or VAL", tokens.get(0).getIndex());
@@ -69,7 +69,6 @@ public final class Parser {
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
-        match("LIST");
         if (!tokens.has(0)){
             throw new ParseException("Invalid token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }if (!peek(Token.Type.IDENTIFIER)){
@@ -96,7 +95,6 @@ public final class Parser {
      * next token declares a mutable global variable, aka {@code VAR}.
      */
     public Ast.Global parseMutable() throws ParseException {
-        match("VAR");
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
@@ -124,7 +122,6 @@ public final class Parser {
      * next token declares an immutable global variable, aka {@code VAL}.
      */
     public Ast.Global parseImmutable() throws ParseException {
-        match("VAL");
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
@@ -498,25 +495,25 @@ public final class Parser {
     public Ast.Expression parsePrimaryExpression() throws ParseException {
         if (!tokens.has(0))
             throw new ParseException("Dude there's no tokens!", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
-        if (peek(Token.Type.INTEGER))
-            return new Ast.Expression.Literal(new BigInteger(tokens.get(0).getLiteral()));
-        if (peek(Token.Type.DECIMAL))
-            return new Ast.Expression.Literal(new BigDecimal(tokens.get(0).getLiteral()));
-        if (peek(Token.Type.CHARACTER)) {
-            String con = tokens.get(0).getLiteral();
+        if (match(Token.Type.INTEGER))
+            return new Ast.Expression.Literal(new BigInteger(tokens.get(-1).getLiteral()));
+        if (match(Token.Type.DECIMAL))
+            return new Ast.Expression.Literal(new BigDecimal(tokens.get(-1).getLiteral()));
+        if (match(Token.Type.CHARACTER)) {
+            String con = tokens.get(-1).getLiteral();
             con = con.substring(1, con.length()-1).replace("\\n","\n");
             return new Ast.Expression.Literal(con.charAt(0));
         }
-        if (peek(Token.Type.STRING))    {
-            String con = tokens.get(0).getLiteral();
+        if (match(Token.Type.STRING))    {
+            String con = tokens.get(-1).getLiteral();
             con = con.substring(1, con.length()-1).replace("\\n","\n");
             return new Ast.Expression.Literal(con);
         }
-        if (peek("NIL"))
+        if (match("NIL"))
             return new Ast.Expression.Literal(null);
-        if (peek("TRUE"))
+        if (match("TRUE"))
             return new Ast.Expression.Literal(true);
-        if (peek("FALSE"))
+        if (match("FALSE"))
             return new Ast.Expression.Literal(false);
         if (match("(") && tokens.has(0)) {
             Ast.Expression expr = parseExpression();
