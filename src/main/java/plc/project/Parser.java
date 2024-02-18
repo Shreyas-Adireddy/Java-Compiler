@@ -186,7 +186,7 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!peek("DO")){
+        if (!match("DO")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         List<Ast.Statement> body = parseBlock();
@@ -208,16 +208,13 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!match("DO")){
-            throw new ParseException("Invalid Token", tokens.get(0).getIndex());
-        }
-        while (!peek("END")) {
+        while (!peek("END") && !peek("ELSE")) {
             statements.add(parseStatement());
         }
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!peek("END")){
+        if (!peek("END") && !peek("ELSE")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         return statements;
@@ -299,7 +296,7 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!peek("DO")){
+        if (!match("DO")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         List<Ast.Statement> thenBlock = parseBlock();
@@ -366,7 +363,7 @@ public final class Parser {
     public Ast.Statement.While parseWhileStatement() throws ParseException {
         match("WHILE");
         Ast.Expression expression = parseExpression();
-        if (!peek("DO")){
+        if (!match("DO")){
             if (tokens.has(0)){
                 throw new ParseException("Invalid Token", tokens.get(0).getIndex());
             }throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
