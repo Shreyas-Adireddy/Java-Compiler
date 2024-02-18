@@ -311,7 +311,7 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, "(", 0),
                                 new Token(Token.Type.IDENTIFIER, "expr1", 1)
                         ),
-                        new ParseException("Invalid Token", 2) // TODO could be wrong
+                        new ParseException("Invalid Token", 6) // TODO could be wrong
                 ),
                 Arguments.of("Missing Operand",
                         Arrays.asList(
@@ -319,7 +319,7 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
                                 new Token(Token.Type.OPERATOR, "-", 6)
                         ),
-                        new ParseException("Invalid Token", 2)
+                        new ParseException("Invalid Token", 7)
                 )
         );
     }
@@ -345,7 +345,7 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, "=", 5),
                                 new Token(Token.Type.OPERATOR, ";", 7)
                         ),
-                        new ParseException("Invalid Token", 2) // TODO could be wrong
+                        new ParseException("Invalid Token", 7) // TODO could be wrong
                 )
         );
     }
