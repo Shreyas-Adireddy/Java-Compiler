@@ -503,6 +503,7 @@ final class ParserTests {
         test(input, expected, Parser::parseSource);
     }
 
+    @Test
     void testCaseFoo() {
         List<Token> input = Arrays.asList(
                 //VAR i = -1;
