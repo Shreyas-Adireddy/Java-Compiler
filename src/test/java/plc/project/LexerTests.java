@@ -15,6 +15,16 @@ public class LexerTests {
     }
     private static Stream<Arguments> testIdentifier() {
         return Stream.of(
+                Arguments.of("Final 1", "abc", true),
+                Arguments.of("Final 2", "abc123", true),
+                Arguments.of("Final 3", "a_b_c", true),
+                Arguments.of("Final 4", "a-b-c", true),
+                Arguments.of("Final 5", "@abc", true),
+                Arguments.of("Final 6", "_abc", false),
+                Arguments.of("Final 7", "1abc", false),
+                Arguments.of("Final 8", "ABC", true),
+                Arguments.of("Final 9", "a", true),
+                Arguments.of("Final 10", "abcdefghijklmnopqrstuvwxyz012346789_-", true),
                 Arguments.of("Alphabetic", "getName", true),
                 Arguments.of("Alphabetic 2", "GetName", true),
                 Arguments.of("Alphanumeric", "thelegend27", true),
@@ -49,6 +59,11 @@ public class LexerTests {
     }
     private static Stream<Arguments> testInteger() {
         return Stream.of(
+                Arguments.of("Final 1", "1", true),
+                Arguments.of("Final 1", "123", true),
+                Arguments.of("Final 1", "123456789123456789123456789", true),
+                Arguments.of("Final 1", "-1", true),
+                Arguments.of("Final 1", "0", true),
                 Arguments.of("Tony 2", "0", true),
                 Arguments.of("Single Digit", "1", true),
                 Arguments.of("Multiple Digits", "12345", true),
@@ -78,6 +93,11 @@ public class LexerTests {
     }
     private static Stream<Arguments> testDecimal() {
         return Stream.of(
+                Arguments.of("Final 1", "1.0", true),
+                Arguments.of("Final 1", "123.456", true),
+                Arguments.of("Final 1", "9007199254740993.0", true),
+                Arguments.of("Final 1", "-1.0", true),
+                Arguments.of("Final 1", "111.000", true),
                 Arguments.of("No Leading Zero 0", "-01.5", false),
                 Arguments.of("Negative Decimal", "-0.1", true),
                 Arguments.of("Multiple Digits", "123.456", true),
@@ -98,6 +118,16 @@ public class LexerTests {
     }
     private static Stream<Arguments> testCharacter() {
         return Stream.of(
+                Arguments.of("Final 1", "''", false),
+                Arguments.of("Final 2", "'c'", true),
+                Arguments.of("Final 3", "'abc'", false),
+                Arguments.of("Final 4", "'1'", true),
+                Arguments.of("Final 5", "'ρ'", true),
+                Arguments.of("Final 6", "' '", true),
+                Arguments.of("Final 7", "'\''", true),
+                Arguments.of("Final 8", "'\\'", true),
+                Arguments.of("Final 9", "'c\n'", false),
+                Arguments.of("Final 10", "'", false),
                 Arguments.of("LF", "'\n'", false),
                 Arguments.of("CR", "'\r'", false),
                 Arguments.of("BB", "'\\'", false),
@@ -125,7 +155,21 @@ public class LexerTests {
     }
     private static Stream<Arguments> testString() {
         return Stream.of(
-                // Matching Cases
+                Arguments.of("Final 1", "\"\"", true),
+                Arguments.of("Final 2", "\"c\"", true),
+                Arguments.of("Final 3", "\"abc\"", true),
+                Arguments.of("Final 4", "\"123\"", true),
+                Arguments.of("Final 5", "\"!@#$%^&*\"", true),
+                Arguments.of("Final 6", "\"ρ★⚡\"", true),
+                Arguments.of("Final 7", "\"\b\t\"", true),
+                Arguments.of("Final 8", "\"Hello, \\nWorld!\"", true),
+                Arguments.of("Final 9", "\"a\\bcdefghijklm\\nopq\\rs\\tuvwxyz\"\n", false),
+                Arguments.of("Final 10", "\"sq\\'dq\\\"bs\\\\\"", false),
+                Arguments.of("Final 11", "\"abc\\0123\"", false),
+                Arguments.of("Final 12", "\"a\\u0000b\u12ABc\"", true),
+                Arguments.of("Final 13", "\"unterminated", false),
+                Arguments.of("Final 14", "\"unterminated\n\"", false),
+                Arguments.of("Final 15", "\"", false),
                 Arguments.of("Empty", "\"\"", true),
                 Arguments.of("NL", "\"\n\"", false),
                 Arguments.of("CR", "\"\r\"", false),
@@ -141,7 +185,6 @@ public class LexerTests {
                 Arguments.of("Working Escape Character 6", "\"1\\\"2\"", true),
                 Arguments.of("Working Escape Character 7", "\"1\\\\2\"", true),
                 Arguments.of("Working Escape Characters", "\"\\\\\\b\\t\\'\\\"\\\\WOAH\\\\\\b\\n\\r\\t\\'\\\"\\\\\"", true),
-                // Non-matching Cases
                 Arguments.of("Unterminated", "\"unt  ", false),
                 Arguments.of("Invalid Escape", "\"invalid\\escape\"", false),
                 Arguments.of("Not Closed Right", "\"unterminated", false),
@@ -163,6 +206,16 @@ public class LexerTests {
     }
     private static Stream<Arguments> testOperator() {
         return Stream.of(
+                Arguments.of("Final 1", "%", true),
+                Arguments.of("Final 2", "ρ", true),
+                Arguments.of("Final 3", "==", true),
+                Arguments.of("Final 4", ">", true),
+                Arguments.of("Final 5", "!=", true),
+                Arguments.of("Final 6", "+", true),
+                Arguments.of("Final 7", "-", true),
+                Arguments.of("Final 8", " ", true),
+                Arguments.of("Final 9", "\t", false),
+                Arguments.of("Final 10", "\f", false),
                 Arguments.of("Comparison", "||", true),
                 Arguments.of("Comparison", "!=", true),
                 Arguments.of("Comparison", "&&", true),
@@ -235,33 +288,32 @@ public class LexerTests {
                                 new Token(Token.Type.IDENTIFIER, "END", 161),
                                 //END
                                 new Token(Token.Type.IDENTIFIER, "END", 165)
+                    )),
+                Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+                        new Token(Token.Type.IDENTIFIER, "x", 4),
+                        new Token(Token.Type.OPERATOR, "=", 6),
+                        new Token(Token.Type.INTEGER, "5", 8),
+                        new Token(Token.Type.OPERATOR, ";", 9)
+                    )),
+                Arguments.of("Example 2", "print(\"Hello, World!\");",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "print", 0),
+                                new Token(Token.Type.OPERATOR, "(", 5),
+                                new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
+                                new Token(Token.Type.OPERATOR, ")", 21),
+                                new Token(Token.Type.OPERATOR, ";", 22)
+                    )),
+                Arguments.of("Example 3", "VAR i = -1 : Integer;",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                                new Token(Token.Type.IDENTIFIER, "i", 4),
+                                new Token(Token.Type.OPERATOR, "=", 6),
+                                new Token(Token.Type.INTEGER, "-1", 8),
+                                new Token(Token.Type.OPERATOR, ":", 11),
+                                new Token(Token.Type.IDENTIFIER, "Integer", 13),
+                                new Token(Token.Type.OPERATOR, ";", 20)
                     ))
-//                    ,
-//                Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
-//                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-//                        new Token(Token.Type.IDENTIFIER, "x", 4),
-//                        new Token(Token.Type.OPERATOR, "=", 6),
-//                        new Token(Token.Type.INTEGER, "5", 8),
-//                        new Token(Token.Type.OPERATOR, ";", 9)
-//                    )),
-//                Arguments.of("Example 2", "print(\"Hello, World!\");",
-//                        Arrays.asList(
-//                                new Token(Token.Type.IDENTIFIER, "print", 0),
-//                                new Token(Token.Type.OPERATOR, "(", 5),
-//                                new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
-//                                new Token(Token.Type.OPERATOR, ")", 21),
-//                                new Token(Token.Type.OPERATOR, ";", 22)
-//                    )),
-//                Arguments.of("Example 3", "VAR i = -1 : Integer;",
-//                        Arrays.asList(
-//                                new Token(Token.Type.IDENTIFIER, "VAR", 0),
-//                                new Token(Token.Type.IDENTIFIER, "i", 4),
-//                                new Token(Token.Type.OPERATOR, "=", 6),
-//                                new Token(Token.Type.INTEGER, "-1", 8),
-//                                new Token(Token.Type.OPERATOR, ":", 11),
-//                                new Token(Token.Type.IDENTIFIER, "Integer", 13),
-//                                new Token(Token.Type.OPERATOR, ";", 20)
-//                    ))
 
         );
     }
@@ -311,6 +363,41 @@ public class LexerTests {
 
     private static Stream<Arguments> testWhitespace() {
         return Stream.of(
+                Arguments.of("Final 1", "one two", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
+                ), true),
+                Arguments.of("Final 2", "one\ttwo", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
+                ), true),
+                Arguments.of("Final 3", "one\btwo", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
+                ), true),
+                Arguments.of("Final 4", "one\r\ntwo", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 5)
+                ), true),
+                Arguments.of("Final 5", "one \b\n\r\ttwo", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 8)
+                ), true),
+                Arguments.of("Final 6", "one    two", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.IDENTIFIER, "two", 7)
+                ), true),
+                Arguments.of("Final 7", "      token", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "token", 6)
+                ), true),
+                Arguments.of("Final 8", "token     ", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "token", 0)
+                ), true),
+                Arguments.of("Final 9", "          ", Arrays.asList(), true),
+                Arguments.of("Final 10", "verticaltab\u000Bformfeed\n", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "verticaltab", 0),
+                        new Token(Token.Type.IDENTIFIER, "formfeed", 12)
+                ), true),
                 Arguments.of("Multiple Spaces", "one    two", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "one", 0),
                         new Token(Token.Type.IDENTIFIER, "two", 7)

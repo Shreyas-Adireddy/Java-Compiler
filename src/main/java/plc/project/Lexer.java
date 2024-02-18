@@ -54,11 +54,11 @@ public final class Lexer {
     String operator = "[=!] '='? | '&&' | '||' | 'any character'";
     String whitespace = "[\b\n\r\t] ";
     public Token lexToken() {
-        if (peek("[@A-Za-z]")) {
+        if (match("[@A-Za-z]")) {
             return lexIdentifier();
-        } if (peek("[1-9]") || peek("-") || peek("0", "\\.") || peek("0")) {
+        } if (peek("0|-|[1-9]") || peek("0", "\\.")) {
             return lexNumber();
-        } else if (peek("'")) {
+        } else if (match("'")) {
             return lexCharacter();
         } else if (peek("\"")) {
             return lexString();
@@ -67,10 +67,8 @@ public final class Lexer {
         }  //TODO
     }
     public Token lexIdentifier() {
-        match("@");
-        while (peek("[A-Za-z0-9_-]")) {
-            chars.advance();
-        }
+        while (match("[A-Za-z0-9_-]")) continue;
+
         if (peek("@"))
             throw new ParseException("Multiple @s in Identifier", chars.index);
         return chars.emit(Token.Type.IDENTIFIER); //TODO
@@ -105,7 +103,6 @@ public final class Lexer {
         return chars.emit(Token.Type.INTEGER);
     }
     public Token lexCharacter() {
-        match("'");
         if (peek("[\n\r\b\t\0]")) {
             throw new ParseException("Invalid character", chars.index);
         }
@@ -116,6 +113,7 @@ public final class Lexer {
         } else {
             chars.advance();
         }
+
         if (!match("'")){
             throw new ParseException("Invalid character", chars.index);
         }
