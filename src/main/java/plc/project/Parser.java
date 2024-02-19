@@ -245,7 +245,7 @@ public final class Parser {
             if (match(";"))
                 return new Ast.Statement.Assignment(expr1, expr2);
             else
-                throw new ParseException("Invalid Token", tokens.get(0).getIndex());
+                throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
         if (match(";"))
             return new Ast.Statement.Expression(expr1);
@@ -501,12 +501,28 @@ public final class Parser {
             return new Ast.Expression.Literal(new BigDecimal(tokens.get(-1).getLiteral()));
         if (match(Token.Type.CHARACTER)) {
             String con = tokens.get(-1).getLiteral();
-            con = con.substring(1, con.length()-1).replace("\\n","\n");
+            con = con.substring(1, con.length()-1)
+                    .replace("\\n","\n")
+                    .replace("\\\\","\\")
+                    .replace("\\b","\b")
+                    .replace("\\r","\r")
+                    .replace("\\t","\t")
+                    .replace("\\t","\t")
+                    .replace("\\'","\'")
+                    .replace("\\\"", "\"");
             return new Ast.Expression.Literal(con.charAt(0));
         }
         if (match(Token.Type.STRING))    {
             String con = tokens.get(-1).getLiteral();
-            con = con.substring(1, con.length()-1).replace("\\n","\n");
+            con = con.substring(1, con.length()-1)
+                    .replace("\\n","\n")
+                    .replace("\\'","'")
+                    .replace("\\b","\b")
+                    .replace("\\r","\r")
+                    .replace("\\t","\t")
+                    .replace("\\t","\t")
+                    .replace("\\\"", "\"")
+                    .replace("\\\\","\\");
             return new Ast.Expression.Literal(con);
         }
         if (match("NIL"))

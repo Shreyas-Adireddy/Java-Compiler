@@ -93,6 +93,38 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
+                Arguments.of("Character Literal",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\''", 0)),
+                        new Ast.Expression.Literal('\'')
+                ),
+                Arguments.of("Character Literal1",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\b'", 0)),
+                        new Ast.Expression.Literal('\b')
+                ),
+                Arguments.of("Character Literal2",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\n'", 0)),
+                        new Ast.Expression.Literal('\n')
+                ),
+                Arguments.of("Character Literal3",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\r'", 0)),
+                        new Ast.Expression.Literal('\r')
+                ),
+                Arguments.of("Character Literal4",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\t'", 0)),
+                        new Ast.Expression.Literal('\t')
+                ),
+                Arguments.of("Character Literal5",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\\"'", 0)),
+                        new Ast.Expression.Literal('\"')
+                ),
+                Arguments.of("Character Literal6",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\t''", 0)),
+                        new Ast.Expression.Literal('\t')
+                ),
+                Arguments.of("Character Literal7",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\\\'", 0)),
+                        new Ast.Expression.Literal('\\')
+                ),
                 Arguments.of("NIL Literal",
                         Arrays.asList(new Token(Token.Type.IDENTIFIER, "NIL", 0)),
                         new Ast.Expression.Literal(null) // TODO null might be wrong
@@ -109,15 +141,27 @@ final class ParserExpressionTests {
                         Arrays.asList(new Token(Token.Type.DECIMAL, "2.0", 0)),
                         new Ast.Expression.Literal(new BigDecimal("2.0"))
                 ),
-                Arguments.of("Character Literal",
-                        Arrays.asList(new Token(Token.Type.CHARACTER, "'c'", 0)),
-                        new Ast.Expression.Literal('c')
-                ),
                 Arguments.of("String Literal",
                         Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
                         new Ast.Expression.Literal("string")
                 ),
                 Arguments.of("Escape Character",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
+                        new Ast.Expression.Literal("Hello,\nWorld!")
+                ),
+                Arguments.of("String Literal 1",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"\\n\\r\\t\\\\\\\"\\'\"", 0)),
+                        new Ast.Expression.Literal("\n\r\t\\\"'")
+                ),
+                Arguments.of("Escape Character 2",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
+                        new Ast.Expression.Literal("Hello,\nWorld!")
+                ),
+                Arguments.of("String Literal 3",
+                        Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
+                        new Ast.Expression.Literal("string")
+                ),
+                Arguments.of("Escape Character 4",
                         Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
                         new Ast.Expression.Literal("Hello,\nWorld!")
                 )
@@ -331,6 +375,15 @@ final class ParserExpressionTests {
     }
     private static Stream<Arguments> testStatementParseException() {
         return Stream.of(
+                Arguments.of("Missing ;",
+                        Arrays.asList(
+                                //name = e
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.IDENTIFIER, "e", 7)
+                        ),
+                        new ParseException("Invalid Token", 8) // TODO could be wrong
+                ),
                 Arguments.of("Missing Semicolon",
                         Arrays.asList(
                                 //f
