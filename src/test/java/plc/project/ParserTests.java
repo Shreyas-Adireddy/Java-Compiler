@@ -28,6 +28,25 @@ final class ParserTests {
 
     private static Stream<Arguments> testSource() {
         return Stream.of(
+                Arguments.of("Function Global", //TODO TONY PLZ DO
+                        Arrays.asList(
+                                // FUN name() DO stmt; END␊VAR name = expr;
+                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20),
+                                new Token(Token.Type.IDENTIFIER, "VAR", 24),
+                                new Token(Token.Type.IDENTIFIER, "name", 28),
+                                new Token(Token.Type.OPERATOR, "=", 33),
+                                new Token(Token.Type.IDENTIFIER, "expr", 35),
+                                new Token(Token.Type.IDENTIFIER, ";", 39)
+                        ),
+                        null
+                ),
                 Arguments.of("Zero Statements",
                         Arrays.asList(),
                         new Ast.Source(Arrays.asList(), Arrays.asList())
@@ -57,29 +76,6 @@ final class ParserTests {
                                 new Token(Token.Type.IDENTIFIER, "stmt", 14),
                                 new Token(Token.Type.OPERATOR, ";", 18),
                                 new Token(Token.Type.IDENTIFIER, "END", 20)
-                        ),
-                        new Ast.Source(
-                                Arrays.asList(),
-                                Arrays.asList(new Ast.Function("name", Arrays.asList(), Arrays.asList(
-                                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
-                                )))
-                        )
-                ),
-                Arguments.of("Function", //TODO TONY PLZ DO
-                        Arrays.asList(
-                                // FUN name() DO stmt; END␊VAR name = expr;
-                                new Token(Token.Type.IDENTIFIER, "FUN", 0),
-                                new Token(Token.Type.IDENTIFIER, "name", 4),
-                                new Token(Token.Type.OPERATOR, "(", 8),
-                                new Token(Token.Type.OPERATOR, ")", 9),
-                                new Token(Token.Type.IDENTIFIER, "DO", 11),
-                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
-                                new Token(Token.Type.OPERATOR, ";", 18),
-                                new Token(Token.Type.IDENTIFIER, "END", 20),
-                                new Token(Token.Type.IDENTIFIER, "VAR", 24),
-                                new Token(Token.Type.IDENTIFIER, "name", 28),
-                                new Token(Token.Type.OPERATOR, "=", 33),
-                                new Token(Token.Type.IDENTIFIER, "expr", 35)
                         ),
                         new Ast.Source(
                                 Arrays.asList(),
@@ -209,6 +205,39 @@ final class ParserTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr"),
                                 Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))),
                                 Arrays.asList()
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testSwitchStatement(String test, List<Token> tokens, Ast.Statement.Switch expected) {
+        test(tokens, expected, Parser::parseSwitchStatement);
+    }
+
+    private static Stream<Arguments> testSwitchStatement() {
+        return Stream.of(
+                Arguments.of("Case Switch",
+                        Arrays.asList(
+                                // 0      7     13   18    2426   3133      41   46
+                                // SWITCH expr1 CASE expr2 : stmt1; DEFAULT stmt2; END
+                                new Token(Token.Type.IDENTIFIER, "SWITCH", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 7),
+                                new Token(Token.Type.IDENTIFIER, "CASE", 13),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 18),
+                                new Token(Token.Type.OPERATOR, ":", 24),
+                                new Token(Token.Type.IDENTIFIER, "stmt1", 26),
+                                new Token(Token.Type.IDENTIFIER, ";", 31),
+                                new Token(Token.Type.OPERATOR, "DEFAULT", 33),
+                                new Token(Token.Type.IDENTIFIER, "stmt2", 41),
+                                new Token(Token.Type.IDENTIFIER, ";", 46),
+                                new Token(Token.Type.IDENTIFIER, "END", 48)
+                        ),
+                        new Ast.Statement.Switch(
+                                new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                Arrays.asList(new Ast.Statement.Case(Optional.of(new Ast.Expression.Access(Optional.empty(), "expr2")), Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1")))),
+                                              new Ast.Statement.Case(Optional.empty(), Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt2")))))
                         )
                 )
         );

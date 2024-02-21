@@ -36,14 +36,21 @@ public final class Parser {
         List<Ast.Function> functions = new ArrayList<>();
 
         while (tokens.has(0)) {
-            if (peek("LIST") || peek("VAR") || peek("VAL")) {
+            if (peek("LIST") || peek("VAR") || peek("VAL"))
                 globals.add(parseGlobal());
-            } else if (peek("FUN")) {
-                functions.add(parseFunction());
-            } else {
-                throw new ParseException("Invalid Token", tokens.get(0).getIndex());
-            }
+            else
+                break;
         }
+
+        while (tokens.has(0)) {
+            if (peek("FUN"))
+                functions.add(parseFunction());
+            else
+                throw new ParseException("Invalid Token", tokens.get(0).getIndex());
+        }
+
+
+        if (tokens.has(0)) throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
 
         return new Ast.Source(globals, functions);
     }
@@ -205,13 +212,13 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        while (!peek("END") && !peek("ELSE")) {
+        while (!peek("END") && !peek("ELSE") && !peek("DEFAULT")) {
             statements.add(parseStatement());
         }
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!peek("END") && !peek("ELSE")){
+        if (!peek("END") && !peek("ELSE") && !peek("DEFAULT")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         return statements;
