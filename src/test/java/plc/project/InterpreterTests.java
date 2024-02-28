@@ -410,15 +410,15 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testFunctionExpression() {
         return Stream.of(
-                // function()
-                Arguments.of("Function",
-                        new Ast.Expression.Function("function", Arrays.asList()),
-                        "function"
-                ),
                 // print("Hello, World!")
                 Arguments.of("Print",
                         new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
                         Environment.NIL.getValue()
+                ),
+                // function()
+                Arguments.of("Function",
+                        new Ast.Expression.Function("function", Arrays.asList()),
+                        "function"
                 )
         );
     }

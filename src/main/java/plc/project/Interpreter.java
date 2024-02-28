@@ -3,8 +3,7 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
@@ -82,7 +81,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        return ast.getLiteral() == null ? Environment.NIL : Environment.create(ast.getLiteral());
     }
 
     @Override
@@ -97,12 +96,21 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Scope scope = getScope(); // TODO I DONT FUCKING GET THIS
+        Environment.Variable var = scope.lookupVariable(ast.getName());
+        if (ast.getOffset().isEmpty()) return var.getValue();
+        Environment.PlcObject offset = visit(ast.getOffset().get());
+        ArrayList listVar = (ArrayList) var.getValue().getValue();
+//        return Environment.create(listVar[offset.getValue()]);
+        return null;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Scope scope = getScope();
+        Environment.Function func = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+        if (func.getArity() != 0) return Environment.NIL; // TODO SHRYAS THIS IS PROBABLY WRONG
+        return func.invoke(Arrays.asList());
     }
 
     @Override
