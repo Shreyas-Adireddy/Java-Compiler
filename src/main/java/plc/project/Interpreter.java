@@ -30,10 +30,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         for (Ast.Function function : ast.getFunctions()) {
             visit(function);
         }
-        if (ast.getFunctions().stream().anyMatch(f -> f.getName().equals("main") && f.getParameters().isEmpty())) {
-            return visit(new Ast.Expression.Function("main", List.of()));
-        }
-        throw new RuntimeException("Main function not found");
+        return scope.lookupFunction("main", 0).invoke(Collections.emptyList());
     }
 
     @Override
