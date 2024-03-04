@@ -193,56 +193,66 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             if (requireType(Boolean.class, visit(ast.getLeft())) == requireType(Boolean.class, visit(ast.getRight())))
                 return visit(ast.getLeft());
             else
-                return Environment.create(Boolean.FALSE);
+                return Environment.create(false);
         } else if (op.equals("||")) {
-            if (requireType(Boolean.class, visit(ast.getLeft())) == Boolean.TRUE)
+            if (requireType(Boolean.class, visit(ast.getLeft())))
                 return visit(ast.getLeft());
-            else if (requireType(Boolean.class, visit(ast.getRight())) == Boolean.TRUE)
+            else if (requireType(Boolean.class, visit(ast.getRight())))
                 return visit(ast.getRight());
             else
-                return Environment.create(Boolean.FALSE);
+                return Environment.create(false);
         } else if (op.equals("==")) {
             if (visit(ast.getLeft()).getValue().equals(visit(ast.getRight()).getValue()))
-                return Environment.create(Boolean.TRUE);
+                return Environment.create(true);
             else
-                return Environment.create(Boolean.FALSE);
+                return Environment.create(false);
         } else if (op.equals("!=")) {
             if (visit(ast.getLeft()).getValue().equals(visit(ast.getRight()).getValue()))
-                return Environment.create(Boolean.FALSE);
+                return Environment.create(false);
             else
-                return Environment.create(Boolean.TRUE);
+                return Environment.create(true);
         } else if (op.equals("+")) {
-            if (visit(ast.getLeft()).getValue().getClass() == String.class && visit(ast.getRight()).getValue().getClass() == String.class)
-                return Environment.create(visit(ast.getLeft()).getValue().toString() + visit(ast.getRight()).getValue().toString());
-            else if (visit(ast.getLeft()).getValue().getClass() == BigInteger.class && visit(ast.getLeft()).getValue().getClass() == visit(ast.getRight()).getValue().getClass())
-                return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue()).add(BigInteger.class.cast(visit(ast.getRight()).getValue())));
-            else if (visit(ast.getLeft()).getValue().getClass() == BigDecimal.class && visit(ast.getLeft()).getValue().getClass() == visit(ast.getRight()).getValue().getClass())
-                return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue()).add(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
+            if (visit(ast.getLeft()).getValue() instanceof String
+                    && visit(ast.getRight()).getValue() instanceof String)
+                return Environment.create(visit(ast.getLeft()).getValue().toString()
+                        + visit(ast.getRight()).getValue().toString());
+            else if ((visit(ast.getLeft()).getValue() instanceof BigInteger)
+                    && (visit(ast.getRight()).getValue() instanceof BigInteger))
+                return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue())
+                        .add(BigInteger.class.cast(visit(ast.getRight()).getValue())));
+            else if (visit(ast.getLeft()).getValue() instanceof BigDecimal
+                    && visit(ast.getRight()).getValue() instanceof BigDecimal)
+                return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue())
+                        .add(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
             else
                 throw new RuntimeException("Wrong Operands for +");
         } else if (op.equals("-") || op.equals("*")) {
-            if ((visit(ast.getLeft()).getValue().getClass() == BigDecimal.class ||
-                    visit(ast.getLeft()).getValue().getClass() == BigInteger.class)
+            if ((visit(ast.getLeft()).getValue() instanceof BigDecimal ||
+                    visit(ast.getLeft()).getValue() instanceof BigInteger)
                     && visit(ast.getLeft()).getValue().getClass() == visit(ast.getRight()).getValue().getClass())
             {
-                if (visit(ast.getLeft()).getValue().getClass() == BigInteger.class) {
+                if (visit(ast.getLeft()).getValue() instanceof BigInteger) {
                     if (op.equals("*"))
-                        return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue()).multiply(BigInteger.class.cast(visit(ast.getRight()).getValue())));
+                        return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue())
+                                .multiply(BigInteger.class.cast(visit(ast.getRight()).getValue())));
                     else
-                        return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue()).subtract(BigInteger.class.cast(visit(ast.getRight()).getValue())));
+                        return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue())
+                                .subtract(BigInteger.class.cast(visit(ast.getRight()).getValue())));
                 }
-                else if (visit(ast.getLeft()).getValue().getClass() == BigDecimal.class) {
+                else if (visit(ast.getLeft()).getValue() instanceof BigDecimal) {
                     if (op.equals("*"))
-                        return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue()).multiply(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
+                        return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue())
+                                .multiply(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
                     else
-                        return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue()).subtract(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
+                        return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue())
+                                .subtract(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
                 } else
                     throw new RuntimeException("Tried to " + op + " but failed");
             }else
                 throw new RuntimeException("Tried to " + op + " but failed");
         } else if (op.equals("/")) {
-            if ((visit(ast.getLeft()).getValue().getClass() == BigDecimal.class ||
-                    visit(ast.getLeft()).getValue().getClass() == BigInteger.class)
+            if ((visit(ast.getLeft()).getValue() instanceof BigDecimal ||
+                    visit(ast.getLeft()).getValue() instanceof BigInteger)
                     && visit(ast.getLeft()).getValue().getClass() == visit(ast.getRight()).getValue().getClass())
             {
                 if ((visit(ast.getRight()).getValue().equals(BigDecimal.ZERO))
@@ -264,18 +274,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 Comparable<Object> left = (Comparable<Object>) visit(ast.getLeft()).getValue();
                 Comparable<Object> right = (Comparable<Object>) visit(ast.getRight()).getValue();
                 comparison = left.compareTo(right);
-                switch (op) {
-                    case "<":
-                        if (comparison < 0)
-                            return Environment.create(Boolean.TRUE);
-                        else
-                            return Environment.create(Boolean.FALSE);
-                    case ">":
-                        if (comparison > 0)
-                            return Environment.create(Boolean.TRUE);
-                        else
-                            return Environment.create(Boolean.FALSE);
-                }
+                if (op.equals("<"))
+                    return Environment.create(comparison < 0);
+                else
+                    return Environment.create(comparison > 0);
             }
         }
         throw new RuntimeException("Wrong Operator");
