@@ -88,12 +88,30 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             throw new RuntimeException("Assignment to non-access expression");
         try {
             scope = new Scope(scope);
-            // TODO List indexing doesn't work i tink
-            Ast.Expression.Access temp = Ast.Expression.Access.class.cast(ast.getReceiver());
-            if (scope.lookupVariable(temp.getName()).getMutable())
-                scope.lookupVariable(temp.getName()).setValue(visit(ast.getValue()));
-            else
-                throw new RuntimeException("Assignment to an immutable");
+            Ast.Expression.Access receiverAccess = (Ast.Expression.Access) ast.getReceiver();
+            Environment.Variable receiverVariable = scope.lookupVariable(receiverAccess.getName());
+
+            if (!receiverVariable.getMutable()) {
+                throw new RuntimeException("Assignment to an immutable variable");
+            }
+            if (receiverAccess.getOffset().isPresent()) {
+                Environment.PlcObject list = receiverVariable.getValue();
+                Environment.PlcObject indexObj = visit(receiverAccess.getOffset().get());
+                Environment.PlcObject valueToAssign = visit(ast.getValue());
+
+                if (!(list.getValue() instanceof List) || !(indexObj.getValue() instanceof BigInteger)) {
+                    throw new RuntimeException("Invalid index access or value assignment");
+                }
+                List<Object> listValue = (List<Object>) list.getValue();
+                int idx = ((BigInteger) indexObj.getValue()).intValue();
+                if (idx < 0 || idx >= listValue.size()) {
+                    throw new RuntimeException("Index out of bounds");
+                }
+                //Environment.PlcObject tmp = listValue.get(idx);
+                listValue.set(idx, valueToAssign.getValue());
+            } else {
+                receiverVariable.setValue(visit(ast.getValue()));
+            }
         } finally {
             scope = scope.getParent();
         }
@@ -282,7 +300,25 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        return scope.lookupVariable(ast.getName()).getValue();
+        if (ast.getOffset().isEmpty())
+            return scope.lookupVariable(ast.getName()).getValue();
+        Environment.PlcObject indexObject = visit(ast.getOffset().get());
+        Environment.PlcObject listObject = scope.lookupVariable(ast.getName()).getValue();
+        if (!(indexObject.getValue() instanceof BigInteger)){
+            throw new RuntimeException("Index not an integer");
+        }
+        if (!(listObject.getValue() instanceof List<?>)) {
+            throw new RuntimeException("Variable not a list");
+        }
+        BigInteger index = (BigInteger) indexObject.getValue();
+        List<Environment.PlcObject> plcList = (List<Environment.PlcObject>) listObject.getValue();
+        int size = plcList.size();
+        if (index.compareTo(BigInteger.ZERO) >= 0 && index.compareTo(BigInteger.valueOf(size)) < 0) {
+            return Environment.create(plcList.get(index.intValue()));
+        } else {
+            throw new RuntimeException("Index out of bounds");
+        }
+
     }
 
     @Override
@@ -301,11 +337,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.PlcList ast) {
-        List<Environment.PlcObject> list = ast.getValues()
-                .stream()
-                .map(this::visit)
-                .collect(Collectors.toList());
-        return Environment.create(list);
+        List<Ast.Expression> list = ast.getValues();
+        List<Object> plcList = new ArrayList<>();;
+        for (Ast.Expression expression : list){
+            plcList.add(visit(expression).getValue());
+        }
+        return Environment.create(plcList);
     }
 
     /**
