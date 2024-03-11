@@ -30,6 +30,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         for (Ast.Function function : ast.getFunctions()) {
             visit(function);
         }
+        scope = new Scope(scope);
         return scope.lookupFunction("main", 0).invoke(Collections.emptyList());
     }
 
@@ -45,23 +46,24 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Function ast) {
+        Scope declareScope = scope;
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+            Scope invokeScope = scope;
+            scope = new Scope(declareScope);
+            for (int i = 0; i < ast.getParameters().size(); i++) {
+                scope.defineVariable(ast.getParameters().get(i), true, args.get(i));
+            }
             try {
-                scope = new Scope(scope);
-                for (int i = 0; i < ast.getParameters().size(); i++) {
-                    scope.defineVariable(ast.getParameters().get(i),true, args.get(i)); // TODO: is mutability true??
-                }
-                for (Ast.Statement statement : ast.getStatements()) {
-                    visit(statement);
-                }
-            } catch (Return r) {
-                return r.value;
-            } finally {
-                scope = scope.getParent();
+                ast.getStatements().forEach(this::visit);
+            }
+            catch (Return returnValue) {
+                return returnValue.value;
+            }
+            finally {
+                scope = invokeScope;
             }
             return Environment.NIL;
-        }
-        );
+        });
 
         return Environment.NIL;
     }
