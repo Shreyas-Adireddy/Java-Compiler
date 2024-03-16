@@ -81,8 +81,14 @@ public final class Parser {
         }if (!peek(Token.Type.IDENTIFIER)){
             throw new ParseException("Invalid token", tokens.get(0).getIndex());
         }
+        String typeName = "Any";
         String name = tokens.get(0).getLiteral();
         tokens.advance();
+
+        if (!match(":") || !match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
+        }
+        typeName = tokens.get(-1).getLiteral();
         if (!match("=") || !match("[")){
             throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
         }
@@ -94,7 +100,7 @@ public final class Parser {
         if (!match("]") || !match(";")){
             throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
         }
-        return new Ast.Global(name, true, Optional.of(new Ast.Expression.PlcList(expressions)));
+        return new Ast.Global(name, typeName, true, Optional.of(new Ast.Expression.PlcList(expressions)));
     }
 
     /**
@@ -108,9 +114,16 @@ public final class Parser {
         if (!peek(Token.Type.IDENTIFIER)){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
+        String typeName = "Any";
         String name = tokens.get(0).getLiteral();
         tokens.advance();
         Optional<Ast.Expression> expression = Optional.empty();
+
+        if (!match(":") || !match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
+        }
+        typeName = tokens.get(-1).getLiteral();
+
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
@@ -121,7 +134,7 @@ public final class Parser {
                 throw new ParseException("Invalid Token", tokens.get(0).getIndex());
             }
         }
-        return new Ast.Global(name, true, expression);
+        return new Ast.Global(name, typeName, true, expression);
     }
 
     /**
@@ -135,8 +148,15 @@ public final class Parser {
         if (!peek(Token.Type.IDENTIFIER)){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
+        String typeName = "Any";
         String name = tokens.get(0).getLiteral();
         tokens.advance();
+
+        if (!match(":") || !match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
+        }
+        typeName = tokens.get(-1).getLiteral();
+
         if (tokens.has(0) && !match("=")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }else if (!tokens.has(0)){
@@ -149,7 +169,7 @@ public final class Parser {
         if (!match(";")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
-        return new Ast.Global(name, false, Optional.of(expression));
+        return new Ast.Global(name, typeName, false, Optional.of(expression));
     }
 
     /**
@@ -164,6 +184,7 @@ public final class Parser {
         if (!peek(Token.Type.IDENTIFIER)){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
+        Optional<String> returnTypeName = Optional.of("Any");
         String name = tokens.get(0).getLiteral();
         tokens.advance();
         if (!tokens.has(0)){
@@ -173,12 +194,21 @@ public final class Parser {
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         List<String> parameters = new ArrayList<>();
+        List<String> parameterTypeNames = new ArrayList<>();
         if (!peek(")") && peek(Token.Type.IDENTIFIER)) {
             parameters.add(tokens.get(0).getLiteral());
             tokens.advance();
+            if (!match(":") || !match(Token.Type.IDENTIFIER)) {
+                throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
+            }
+            parameterTypeNames.add(tokens.get(-1).getLiteral());
             while (match(",")) {
                 parameters.add(tokens.get(0).getLiteral());
                 tokens.advance();
+                if (!match(":") || !match(Token.Type.IDENTIFIER)) {
+                    throw new ParseException("Invalid token", tokens.get(0).getIndex() + tokens.get(0).getLiteral().length());
+                }
+                parameterTypeNames.add(tokens.get(-1).getLiteral());
             }
         }
         if (!tokens.has(0)){
@@ -190,6 +220,14 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
+
+        if (match(":")) {
+            if (!match(Token.Type.IDENTIFIER))
+                throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+            else
+                returnTypeName = Optional.of(tokens.get(-1).getLiteral());
+        }
+
         if (!match("DO")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
@@ -200,7 +238,7 @@ public final class Parser {
         if (!match("END")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
-        return new Ast.Function(name, parameters, body);
+        return new Ast.Function(name, parameters, parameterTypeNames, returnTypeName, body);
     }
 
     /**
@@ -278,12 +316,16 @@ public final class Parser {
         String name = tokens.get(0).getLiteral();
         tokens.advance();
         Optional<Ast.Expression> value = Optional.empty();
-        if (match("=")) {
+        Optional<String> typeName = Optional.empty();
+
+        if (match("="))
             value = Optional.of(parseExpression());
-        }
-        if (match(";")){
-            return new Ast.Statement.Declaration(name, value);
-        }
+        else if (match(":") && match(Token.Type.IDENTIFIER))
+            typeName = Optional.of(tokens.get(-1).getLiteral());
+
+        if (match(";"))
+            return new Ast.Statement.Declaration(name, typeName, value);
+
         if (tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
