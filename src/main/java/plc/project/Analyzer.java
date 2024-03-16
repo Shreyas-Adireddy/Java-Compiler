@@ -2,8 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -26,67 +25,223 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException();  // TODO
+        for (Ast.Global global : ast.getGlobals()) {
+            visit(global);
+        }
+        for (Ast.Function function : ast.getFunctions()) {
+            visit(function);
+        }
+        if (scope.lookupFunction("main", 0).getReturnType().equals(Environment.Type.INTEGER))
+            throw new RuntimeException("Main method must return integer");
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Global ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Optional<Ast.Expression> value = ast.getValue();
+        if (value.isPresent()){
+            if (value.get().getClass() == (Ast.Expression.PlcList.class))
+                ((Ast.Expression.PlcList) value.get()).setType(Environment.getType(ast.getTypeName()));
+            visit(value.get());
+            requireAssignable(Environment.getType(ast.getTypeName()), value.get().getType());
+        }
+        Environment.Variable variable = scope.defineVariable(ast.getName(),
+                        ast.getName(),
+                        Environment.getType(ast.getTypeName()),
+                        ast.getMutable(),
+                        Environment.NIL);
+        ast.setVariable(variable);
+        return null;
     }
 
     @Override
     public Void visit(Ast.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+        List<Environment.Type> argsTypes = new ArrayList<>();
+        for (String string : ast.getParameterTypeNames())
+            argsTypes.add(Environment.getType(string));
+
+        Optional<String> returnType = ast.getReturnTypeName();
+        Environment.Function func = null;
+        func = returnType.map(s -> scope.defineFunction(ast.getName(),
+                ast.getName(),
+                argsTypes,
+                Environment.getType(s),
+                args -> Environment.NIL)).orElseGet(() -> scope.defineFunction(ast.getName(),
+                ast.getName(),
+                argsTypes,
+                Environment.getType("Nil"),
+                args -> Environment.NIL));
+
+        ast.setFunction(func);
+        try{
+            scope = new Scope(scope);
+            for (int i = 0; i < argsTypes.size(); i++) {
+                scope.defineVariable(ast.getParameters().get(i),
+                        ast.getParameters().get(i),
+                        Environment.getType(ast.getParameterTypeNames().get(i)),
+                        true,
+                        Environment.NIL);
+            }
+        }finally {
+            scope = scope.getParent();
+        }
+        function = ast;
+        ast.getStatements().forEach(this::visit);
+        function = null;
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getExpression().getClass() != Ast.Expression.Function.class)
+            throw new RuntimeException("Expected Function");
+        visit(ast.getExpression());
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Environment.Type type = null;
+        if (ast.getTypeName().isPresent()){
+            type = Environment.getType(ast.getTypeName().get());
+            if (ast.getValue().isPresent()){
+                visit(ast.getValue().get());
+                requireAssignable(type, ast.getValue().get().getType());
+            }
+        } else {
+            if (ast.getValue().isEmpty())
+                throw new RuntimeException("Variable Value missing");
+            visit(ast.getValue().get());
+            type = ast.getValue().get().getType();
+        }
+        Environment.Variable variable = scope.defineVariable(ast.getName(), ast.getName(), type, true, Environment.NIL);
+        ast.setVariable(variable);
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getReceiver().getClass() != Ast.Expression.Access.class)
+            throw new RuntimeException("Not able to assign");
+
+        visit(ast.getReceiver());
+        visit(ast.getValue());
+        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.If ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+        if (!ast.getCondition().getType().equals(Environment.Type.BOOLEAN)) {
+            throw new RuntimeException("Condition not a boolean.");
+        }
+        if (ast.getThenStatements().isEmpty()) {
+            throw new RuntimeException("THEN block empty");
+        }
+        scope = new Scope(scope);
+        ast.getThenStatements().forEach(this::visit);
+        scope = scope.getParent();
+
+        scope = new Scope(scope);
+        ast.getElseStatements().forEach(this::visit);
+        scope = scope.getParent();
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Switch ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+
+        List<Ast.Statement.Case> cases = ast.getCases();
+        for (int i = 0; i < cases.size(); i++) {
+            if (cases.get(i).getValue().isPresent()) {
+                if (i == cases.size() - 1) {
+                    throw new RuntimeException("Default case cannot have condition");
+                }
+                visit(cases.get(i).getValue().get());
+                if (cases.get(i).getValue().get().getType().equals(ast.getCondition().getType())) {
+
+                } else {
+                    throw new RuntimeException("Condition and case type must match in a switch statement.");
+                }
+
+            }
+            visit(cases.get(i));
+        }
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Case ast) {
-        throw new UnsupportedOperationException();  // TODO
+        scope = new Scope(scope);
+        ast.getStatements().forEach(this::visit);
+        scope = scope.getParent();
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.While ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+        if (!ast.getCondition().getType().equals(Environment.Type.BOOLEAN))
+            throw new RuntimeException("Invalid condition in WHILE statement.");
+
+        scope = new Scope(scope);
+        ast.getStatements().forEach(this::visit);
+        scope = scope.getParent();
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getValue());
+        requireAssignable(Environment.getType(function.getReturnTypeName().get()), ast.getValue().getType());
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getLiteral() instanceof Boolean) {
+            ast.setType(Environment.Type.BOOLEAN);
+        }
+        else if (ast.getLiteral() instanceof Character) {
+            ast.setType(Environment.Type.CHARACTER);
+        }
+        else if (ast.getLiteral() instanceof String) {
+            ast.setType(Environment.Type.STRING);
+        }
+        else if (ast.getLiteral() instanceof BigInteger) {
+            BigInteger integer = (BigInteger) ast.getLiteral();
+            if (integer.toByteArray().length <= 4){
+                ast.setType(Environment.Type.INTEGER);
+            }else{
+                throw new RuntimeException("To big integer");
+            }
+        } else if (ast.getLiteral() instanceof BigDecimal) {
+            BigDecimal decimal = (BigDecimal) ast.getLiteral();
+            if (decimal.compareTo(BigDecimal.valueOf(Double.POSITIVE_INFINITY)) == 0
+                || decimal.compareTo(BigDecimal.valueOf(Double.NEGATIVE_INFINITY)) == 0) {
+                throw new RuntimeException("To big decimal");
+            } else {
+                ast.setType(Environment.Type.INTEGER);
+            }
+        } else {
+            ast.setType(Environment.Type.NIL);
+        }
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getExpression() instanceof Ast.Expression.Binary))
+            throw new RuntimeException("The grouped expression is not binary.");
+
+        visit(ast.getExpression());
+        ast.setType(ast.getExpression().getType());
+        return null;
     }
 
     @Override

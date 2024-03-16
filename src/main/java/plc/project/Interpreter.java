@@ -30,7 +30,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         for (Ast.Function function : ast.getFunctions()) {
             visit(function);
         }
-        scope = new Scope(scope);
         return scope.lookupFunction("main", 0).invoke(Collections.emptyList());
     }
 
