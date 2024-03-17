@@ -246,26 +246,112 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException();  // TODO
+        String op = (ast.getOperator());
+        Ast.Expression left = ast.getLeft(), right = ast.getRight();
+        visit(left);
+        visit(right);
+        if (op == "&&" || op == "||"){
+            if (left.getType().equals(Environment.Type.BOOLEAN) &&
+                    right.getType().equals(Environment.Type.BOOLEAN)) {
+                ast.setType(Environment.Type.BOOLEAN);
+            } else {
+                throw new RuntimeException("Left or Right not a boolean");
+            }
+        } else if (op == "<" || op == ">" || op == "==" || op == "!=") {
+            requireAssignable(Environment.Type.COMPARABLE, left.getType());
+            requireAssignable(Environment.Type.COMPARABLE, right.getType());
+            if (left.getType().equals(right.getType()))
+                ast.setType(Environment.Type.BOOLEAN);
+            else
+                throw new RuntimeException("Left or Right types don't match");
+        } else if (op == "+") {
+            if (left.getType().equals(Environment.Type.STRING)
+                    || right.getType().equals(Environment.Type.STRING)){
+                ast.setType(Environment.Type.STRING);
+            }
+            else if (left.getType().equals(Environment.Type.INTEGER)
+                    && left.getType().equals(right.getType())){
+                ast.setType(Environment.Type.INTEGER);
+            }
+            else if (left.getType().equals(Environment.Type.DECIMAL)
+                    && left.getType().equals(right.getType())){
+                ast.setType(Environment.Type.DECIMAL);
+            }
+            else {
+                throw new RuntimeException("+ is supported for those types");
+            }
+        } else if (op == "-" || op == "/" || op == "*") {
+            if (left.getType().equals(Environment.Type.INTEGER)
+                    && left.getType().equals(right.getType())){
+                ast.setType(Environment.Type.INTEGER);
+            }
+            else if (left.getType().equals(Environment.Type.DECIMAL)
+                    && left.getType().equals(right.getType())){
+                ast.setType(Environment.Type.DECIMAL);
+            }
+            else {
+                throw new RuntimeException("+ is supported for those types");
+            }
+        } else if (op == "^") {
+            if (left.getType().equals(Environment.Type.INTEGER)
+                    && left.getType().equals(right.getType())){
+                ast.setType(Environment.Type.INTEGER);
+            } else {
+                throw new RuntimeException("+ is supported for those types");
+            }
+        }
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getOffset().isPresent()){
+            Ast.Expression offset = ast.getOffset().get();
+            visit(offset);
+            if (offset.getType().equals(Environment.Type.INTEGER)){
+                throw new RuntimeException("Offset must be an integer");
+            }
+        }
+        ast.setVariable(scope.lookupVariable(ast.getName()));
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+        ast.setFunction(scope.lookupFunction(ast.getName(), ast.getArguments().size()));
+        List<Ast.Expression> args = ast.getArguments();
+        List<Environment.Type> types = ast.getFunction().getParameterTypes();
+        for (int i = 0; i < args.size(); i++) {
+            Ast.Expression arg = args.get(i);
+            Environment.Type param = types.get(i);
+
+            visit(arg);
+            requireAssignable(param, arg.getType());
+        }
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expression.PlcList ast) {
-        throw new UnsupportedOperationException();  // TODO
+        List<Ast.Expression> list = ast.getValues();
+        list.forEach(expr -> {
+            visit(expr);
+            requireAssignable(ast.getType(), expr.getType());
+        });
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
-        throw new UnsupportedOperationException();  // TODO
+        if (target.equals(type) || target.equals(Environment.Type.ANY))
+            return;
+        if (target.equals(Environment.Type.COMPARABLE)
+                && (type.getName().equals("Integer")
+                || type.getName().equals("Decimal")
+                || type.getName().equals("Character")
+                || type.getName().equals("String"))) {
+                return;
+        }
+        throw new RuntimeException("Types don't match");
     }
 
 }
