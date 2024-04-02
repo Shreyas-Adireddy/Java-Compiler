@@ -329,6 +329,13 @@ final class InterpreterTests {
                         ),
                         true
                 ),
+                Arguments.of("And (Short Circuit)",
+                        new Ast.Expression.Binary("&&",
+                                new Ast.Expression.Literal(false),
+                                new Ast.Expression.Access(Optional.empty(), "undefined")
+                        ),
+                        false
+                ),
                 // 1 < 10
                 Arguments.of("Less Than",
                         new Ast.Expression.Binary("<",
@@ -352,6 +359,13 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal("b")
                         ),
                         "ab"
+                ),
+                Arguments.of("Concatenation 2",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Function("log", Arrays.asList(new Ast.Expression.Literal("1"))),
+                                new Ast.Expression.Function("log", Arrays.asList(new Ast.Expression.Literal("2")))
+                        ),
+                        "12"
                 ),
                 // 1 + 10
                 Arguments.of("Addition",
@@ -414,6 +428,10 @@ final class InterpreterTests {
                 Arguments.of("Print",
                         new Ast.Expression.Function("print", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
                         Environment.NIL.getValue()
+                ),
+                Arguments.of("log",
+                        new Ast.Expression.Function("log", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
+                        "Hello, World!"
                 ),
                 // function()
                 Arguments.of("Function",

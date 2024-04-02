@@ -9,6 +9,7 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -94,6 +95,7 @@ public final class AnalyzerTests {
                         new Ast.Global("name", "Unknown", true, Optional.empty()),
                         null
                 )
+
         );
     }
 
@@ -419,6 +421,42 @@ public final class AnalyzerTests {
 
     private static Stream<Arguments> testBinaryExpression() {
         return Stream.of(
+                Arguments.of("Decimal Addition",
+                        // 1.0 + 10.0
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        init(new Ast.Expression.Binary("+",
+                                init(new Ast.Expression.Literal(BigDecimal.ONE), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                init(new Ast.Expression.Literal(BigDecimal.TEN), ast -> ast.setType(Environment.Type.DECIMAL))
+                        ), ast -> ast.setType(Environment.Type.DECIMAL))
+                ),
+                Arguments.of(" Valid Decimal Comparison",
+                        // 1.0 + 10.0
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(BigDecimal.TEN)
+                        ),
+                        init(new Ast.Expression.Binary(">",
+
+                                init(new Ast.Expression.Literal(BigDecimal.ONE), ast -> ast.setType(Environment.Type.DECIMAL)),
+
+                                init(new Ast.Expression.Literal(BigDecimal.TEN), ast -> ast.setType(Environment.Type.DECIMAL))
+
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
+                Arguments.of("Comparable valid",
+                        // 10 == 10
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Literal(BigInteger.TEN),
+                                new Ast.Expression.Literal(BigInteger.TEN)
+                        ),
+                        init(new Ast.Expression.Binary("==",
+                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                ),
                 Arguments.of("Logical AND Valid",
                         // TRUE && FALSE
                         new Ast.Expression.Binary("&&",
@@ -465,6 +503,24 @@ public final class AnalyzerTests {
                         new Ast.Expression.Binary("+",
                                 new Ast.Expression.Literal(BigInteger.ONE),
                                 new Ast.Expression.Literal(BigDecimal.ONE)
+                        ),
+                        null
+                ),
+                Arguments.of("Exponentiation",
+                        // 10 ^ 0
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(BigInteger.TEN),
+                                new Ast.Expression.Literal(BigInteger.ZERO)
+                        ),
+                        init(new Ast.Expression.Binary("^",
+                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.INTEGER))
+                ), Arguments.of(" Invalid Comparison",
+                        // 1.0 + 10.0
+                        new Ast.Expression.Binary(">",
+                                new Ast.Expression.Literal(BigDecimal.ONE),
+                                new Ast.Expression.Literal(Boolean.TRUE)
                         ),
                         null
                 )

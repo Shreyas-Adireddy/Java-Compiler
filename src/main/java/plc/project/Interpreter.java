@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -15,6 +16,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         scope.defineFunction("print", 1, args -> {
             System.out.println(args.get(0).getValue());
             return Environment.NIL;
+        });
+        StringWriter writer = new StringWriter();
+        scope.defineFunction("log", 1, args -> {
+            writer.write(String.valueOf(args.get(0)));
+            return args.get(0);
         });
     }
 
@@ -206,10 +212,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
         String op = ast.getOperator();
         if (op.equals("&&")){
-            if (requireType(Boolean.class, visit(ast.getLeft())) == requireType(Boolean.class, visit(ast.getRight())))
-                return visit(ast.getLeft());
-            else
-                return Environment.create(false);
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            requireType(Boolean.class, lhs);
+            if (lhs.getValue().equals(false))
+                return lhs;
+            Environment.PlcObject rhs = visit(ast.getRight());
+            requireType(Boolean.class, rhs);
+            return Environment.create(Boolean.logicalAnd((boolean) lhs.getValue(), (boolean) rhs.getValue()));
         } else if (op.equals("||")) {
             if (requireType(Boolean.class, visit(ast.getLeft())))
                 return visit(ast.getLeft());
@@ -228,10 +237,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             else
                 return Environment.create(true);
         } else if (op.equals("+")) {
-            if (visit(ast.getLeft()).getValue() instanceof String
-                    && visit(ast.getRight()).getValue() instanceof String)
-                return Environment.create(visit(ast.getLeft()).getValue().toString()
-                        + visit(ast.getRight()).getValue().toString());
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if (lhs.getValue() instanceof String || rhs.getValue() instanceof String)
+                return Environment.create("" + lhs.getValue() + rhs.getValue());
             else if ((visit(ast.getLeft()).getValue() instanceof BigInteger)
                     && (visit(ast.getRight()).getValue() instanceof BigInteger))
                 return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue())
@@ -295,6 +304,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 else
                     return Environment.create(comparison > 0);
             }
+        } else if (op.equals("^")){
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if (lhs.getValue() instanceof BigInteger && rhs.getValue() instanceof BigInteger){
+                return Environment.create(((BigInteger) lhs.getValue()).pow(((BigInteger) rhs.getValue()).intValue()));
+            }
+            throw new RuntimeException("LHS and RHS should be integers");
         }
         throw new RuntimeException("Wrong Operator");
     }

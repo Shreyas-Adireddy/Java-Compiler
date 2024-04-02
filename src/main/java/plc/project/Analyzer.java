@@ -16,7 +16,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
-        scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
+        scope.defineFunction("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
     }
 
     public Scope getScope() {
@@ -31,20 +31,22 @@ public final class Analyzer implements Ast.Visitor<Void> {
         for (Ast.Function function : ast.getFunctions()) {
             visit(function);
         }
-        if (scope.lookupFunction("main", 0).getReturnType().equals(Environment.Type.INTEGER))
-            throw new RuntimeException("Main method must return integer");
-
-        return null;
+        if (scope.lookupFunction("main", 0).getReturnType().equals(Environment.Type.INTEGER)) {
+            return null;
+        }
+        throw new RuntimeException("Main method must return integer");
     }
 
     @Override
     public Void visit(Ast.Global ast) {
         Optional<Ast.Expression> value = ast.getValue();
         if (value.isPresent()){
-            if (value.get().getClass() == (Ast.Expression.PlcList.class))
-                ((Ast.Expression.PlcList) value.get()).setType(Environment.getType(ast.getTypeName()));
             visit(value.get());
+            if (value.get() instanceof Ast.Expression.PlcList) {
+                ((Ast.Expression.PlcList) value.get()).setType(Environment.getType(ast.getTypeName()));
+            }
             requireAssignable(Environment.getType(ast.getTypeName()), value.get().getType());
+
         }
         Environment.Variable variable = scope.defineVariable(ast.getName(),
                         ast.getName(),
@@ -87,17 +89,19 @@ public final class Analyzer implements Ast.Visitor<Void> {
             scope = scope.getParent();
         }
         function = ast;
-        ast.getStatements().forEach(this::visit);
+        for (Ast.Statement statement: ast.getStatements())
+            visit(statement);
         function = null;
         return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        if (ast.getExpression().getClass() != Ast.Expression.Function.class)
-            throw new RuntimeException("Expected Function");
-        visit(ast.getExpression());
-        return null;
+        if (ast.getExpression() instanceof Ast.Expression.Function) {
+            visit(ast.getExpression());
+            return null;
+        }
+        throw new RuntimeException("Expected Function");
     }
 
     @Override
@@ -122,13 +126,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        if (ast.getReceiver().getClass() != Ast.Expression.Access.class)
-            throw new RuntimeException("Not able to assign");
-
-        visit(ast.getReceiver());
-        visit(ast.getValue());
-        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
-        return null;
+        if (ast.getReceiver()instanceof Ast.Expression.Access){
+            visit(ast.getReceiver());
+            visit(ast.getValue());
+            requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+            return null;
+        }
+        throw new RuntimeException("Not able to assign");
     }
 
     @Override
@@ -213,20 +217,18 @@ public final class Analyzer implements Ast.Visitor<Void> {
         else if (ast.getLiteral() instanceof String) {
             ast.setType(Environment.Type.STRING);
         }
-        else if (ast.getLiteral() instanceof BigInteger) {
-            BigInteger integer = (BigInteger) ast.getLiteral();
+        else if (ast.getLiteral() instanceof BigInteger integer) {
             if (integer.toByteArray().length <= 4){
                 ast.setType(Environment.Type.INTEGER);
             }else{
-                throw new RuntimeException("To big integer");
+                throw new RuntimeException("Too big integer");
             }
-        } else if (ast.getLiteral() instanceof BigDecimal) {
-            BigDecimal decimal = (BigDecimal) ast.getLiteral();
-            if (decimal.compareTo(BigDecimal.valueOf(Double.POSITIVE_INFINITY)) == 0
-                || decimal.compareTo(BigDecimal.valueOf(Double.NEGATIVE_INFINITY)) == 0) {
-                throw new RuntimeException("To big decimal");
+        } else if (ast.getLiteral() instanceof BigDecimal decimal) {
+            if (decimal.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) == 0
+                || decimal.compareTo(BigDecimal.valueOf(Double.MIN_VALUE)) == 0) {
+                throw new RuntimeException("Too big decimal");
             } else {
-                ast.setType(Environment.Type.INTEGER);
+                ast.setType(Environment.Type.DECIMAL);
             }
         } else {
             ast.setType(Environment.Type.NIL);
@@ -250,21 +252,21 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Ast.Expression left = ast.getLeft(), right = ast.getRight();
         visit(left);
         visit(right);
-        if (op == "&&" || op == "||"){
+        if (op.equals("&&") || op.equals("||")){
             if (left.getType().equals(Environment.Type.BOOLEAN) &&
                     right.getType().equals(Environment.Type.BOOLEAN)) {
                 ast.setType(Environment.Type.BOOLEAN);
             } else {
                 throw new RuntimeException("Left or Right not a boolean");
             }
-        } else if (op == "<" || op == ">" || op == "==" || op == "!=") {
+        } else if (op.equals("<") || op.equals(">") || op.equals("==") || op.equals("!=")) {
             requireAssignable(Environment.Type.COMPARABLE, left.getType());
             requireAssignable(Environment.Type.COMPARABLE, right.getType());
             if (left.getType().equals(right.getType()))
                 ast.setType(Environment.Type.BOOLEAN);
             else
                 throw new RuntimeException("Left or Right types don't match");
-        } else if (op == "+") {
+        } else if (op.equals("+")) {
             if (left.getType().equals(Environment.Type.STRING)
                     || right.getType().equals(Environment.Type.STRING)){
                 ast.setType(Environment.Type.STRING);
@@ -280,7 +282,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             else {
                 throw new RuntimeException("+ is supported for those types");
             }
-        } else if (op == "-" || op == "/" || op == "*") {
+        } else if (op.equals("-") || op.equals("/") || op.equals("*")) {
             if (left.getType().equals(Environment.Type.INTEGER)
                     && left.getType().equals(right.getType())){
                 ast.setType(Environment.Type.INTEGER);
@@ -292,7 +294,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             else {
                 throw new RuntimeException("+ is supported for those types");
             }
-        } else if (op == "^") {
+        } else if (op.equals("^")) {
             if (left.getType().equals(Environment.Type.INTEGER)
                     && left.getType().equals(right.getType())){
                 ast.setType(Environment.Type.INTEGER);
