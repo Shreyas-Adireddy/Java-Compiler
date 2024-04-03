@@ -433,7 +433,7 @@ public final class AnalyzerTests {
                         ), ast -> ast.setType(Environment.Type.DECIMAL))
                 ),
                 Arguments.of(" Valid Decimal Comparison",
-                        // 1.0 + 10.0
+                        // 1.0 > 10.0
                         new Ast.Expression.Binary(">",
                                 new Ast.Expression.Literal(BigDecimal.ONE),
                                 new Ast.Expression.Literal(BigDecimal.TEN)
