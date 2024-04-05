@@ -184,7 +184,7 @@ public final class Parser {
         if (!peek(Token.Type.IDENTIFIER)){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
-        Optional<String> returnTypeName = Optional.of("Any");
+        Optional<String> returnTypeName = Optional.empty();
         String name = tokens.get(0).getLiteral();
         tokens.advance();
         if (!tokens.has(0)){
@@ -222,10 +222,10 @@ public final class Parser {
         }
 
         if (match(":")) {
-            if (!match(Token.Type.IDENTIFIER))
-                throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
-            else
+            if (match(Token.Type.IDENTIFIER))
                 returnTypeName = Optional.of(tokens.get(-1).getLiteral());
+            else
+                throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
 
         if (!match("DO")){
@@ -318,17 +318,23 @@ public final class Parser {
         Optional<Ast.Expression> value = Optional.empty();
         Optional<String> typeName = Optional.empty();
 
+        if (match(":")) {
+            if (match(Token.Type.IDENTIFIER))
+                typeName = Optional.of(tokens.get(-1).getLiteral());
+            else
+                throw new ParseException("Invalid Token", tokens.get(0).getIndex());
+        }
+
         if (match("="))
             value = Optional.of(parseExpression());
-        else if (match(":") && match(Token.Type.IDENTIFIER))
-            typeName = Optional.of(tokens.get(-1).getLiteral());
 
         if (match(";"))
             return new Ast.Statement.Declaration(name, typeName, value);
 
-        if (tokens.has(0)){
+        if (tokens.has(0))
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
-        }throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
+
+        throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
     }
 
     /**
