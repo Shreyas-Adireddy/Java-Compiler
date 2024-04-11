@@ -137,13 +137,14 @@ public final class AnalyzerTests {
                         )),
                         ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
-                Arguments.of("Return Type Mismatch",
+                Arguments.of("Return Type Mismatch 2",
                         // FUN increment(num: Integer): Decimal DO RETURN num + 1; END
                         new Ast.Function("increment", Arrays.asList("num"), Arrays.asList("Integer"), Optional.of("Decimal"), Arrays.asList(
-                                new Ast.Statement.Return(new Ast.Expression.Binary("+",
-                                        new Ast.Expression.Access(Optional.empty(), "num"),
-                                        new Ast.Expression.Literal(BigInteger.ONE)
-                                ))
+                                new Ast.Statement.Expression(
+                                        new Ast.Expression.Function("print", Arrays.asList(
+                                                new Ast.Expression.Access(Optional.empty(), "num")
+                                        ))
+                                )
                         )),
                         null
                 )
@@ -408,6 +409,11 @@ public final class AnalyzerTests {
                 Arguments.of("Integer Invalid",
                         // 9223372036854775807
                         new Ast.Expression.Literal(BigInteger.valueOf(Long.MAX_VALUE)),
+                        null
+                ),
+                Arguments.of("Decimal Invalid",
+                        // 9223372036854775807
+                        new Ast.Expression.Literal(new BigDecimal("123.456e789")),
                         null
                 )
         );

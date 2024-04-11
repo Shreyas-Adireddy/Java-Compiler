@@ -41,12 +41,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Global ast) {
         Optional<Ast.Expression> value = ast.getValue();
         if (value.isPresent()){
-            visit(value.get());
             if (value.get() instanceof Ast.Expression.PlcList) {
                 ((Ast.Expression.PlcList) value.get()).setType(Environment.getType(ast.getTypeName()));
             }
+            visit(value.get());
             requireAssignable(Environment.getType(ast.getTypeName()), value.get().getType());
-
         }
         Environment.Variable variable = scope.defineVariable(ast.getName(),
                         ast.getName(),
@@ -224,8 +223,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 throw new RuntimeException("Too big integer");
             }
         } else if (ast.getLiteral() instanceof BigDecimal decimal) {
-            if (decimal.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) == 0
-                || decimal.compareTo(BigDecimal.valueOf(Double.MIN_VALUE)) == 0) {
+            if ((decimal.doubleValue() > Double.MAX_VALUE) || (decimal.doubleValue() < Double.MIN_VALUE)) {
                 throw new RuntimeException("Too big decimal");
             } else {
                 ast.setType(Environment.Type.DECIMAL);
@@ -310,7 +308,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (ast.getOffset().isPresent()){
             Ast.Expression offset = ast.getOffset().get();
             visit(offset);
-            if (offset.getType().equals(Environment.Type.INTEGER)){
+            if (!(offset.getType().equals(Environment.Type.INTEGER))){
                 throw new RuntimeException("Offset must be an integer");
             }
         }
