@@ -282,6 +282,27 @@ public class GeneratorTests {
         );
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAccessExpression(String test, Ast.Expression.Access ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testAccessExpression() {
+        return Stream.of(
+                Arguments.of("Variable",
+                        // variable
+                        init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.NIL, true, Environment.NIL))),
+                        "variable"
+                ),
+                Arguments.of("List",
+                        // nums[5]
+                        init(new Ast.Expression.Access(Optional.of(init(new Ast.Expression.Literal(BigDecimal.valueOf(5)), ast -> ast.setType(Environment.Type.INTEGER))), "nums"), ast -> ast.setVariable(new Environment.Variable("nums", "nums", Environment.Type.NIL, true, Environment.NIL))),
+                        "nums[5]"
+                )
+        );
+    }
+
     /**
      * Helper function for tests, using a StringWriter as the output stream.
      */

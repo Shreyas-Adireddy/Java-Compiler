@@ -61,7 +61,10 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Global ast) {
-        print(ast.getVariable().getType().getJvmName(), ast.getVariable().getMutable() ? "[] " : "");
+        print(ast.getVariable().getType().getJvmName());
+        if (ast.getValue().isPresent() && ast.getValue().get() instanceof Ast.Expression.PlcList)
+            print("[]");
+        print(" ");
         print(ast.getVariable().getJvmName());
         if (ast.getValue().isPresent()) {
             print(" = ");
@@ -199,11 +202,12 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getCondition());
         print(") {");
         indent++;
-        for (Ast.Statement s : ast.getStatements()) {
+        List<Ast.Statement> statements = ast.getStatements();
+        for (Ast.Statement s : statements) {
             newline(indent);
             visit(s);
         }
-        newline(--indent);
+        if (!statements.isEmpty()) newline(--indent);
         print("}");
         return null;
     }
@@ -248,7 +252,7 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Access ast) {
         print(ast.getVariable().getJvmName());
         if (ast.getOffset().isPresent())
-            print("[", ast.getOffset(), "]");
+            print("[", ast.getOffset().get(), "]");
         return null;
     }
 
