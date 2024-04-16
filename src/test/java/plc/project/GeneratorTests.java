@@ -55,6 +55,38 @@ public class GeneratorTests {
                                 "",
                                 "}"
                         )
+                ),
+                Arguments.of("Hello, World!",
+                        // VAR x: Integer;
+                        // VAR y: Decimal;
+                        // VAR z: String;
+                        // FUN f(): Integer DO RETURN x; END
+                        // FUN g(): Decimal DO RETURN y; END
+                        // FUN h(): String DO RETURN z; END
+                        // FUN main(): Integer DO END
+                        new Ast.Source(
+                                Arrays.asList(),
+                                Arrays.asList(init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                        new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
+                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "}"
+                        )
                 )
         );
     }

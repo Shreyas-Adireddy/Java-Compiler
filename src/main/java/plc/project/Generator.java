@@ -61,6 +61,8 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Global ast) {
+        if (!ast.getMutable()) print("final ");
+
         print(ast.getVariable().getType().getJvmName());
         if (ast.getValue().isPresent() && ast.getValue().get() instanceof Ast.Expression.PlcList)
             print("[]");
@@ -83,7 +85,7 @@ public final class Generator implements Ast.Visitor<Void> {
         List<String> pNames = ast.getParameters();
         List<String> pTypeNames = ast.getParameterTypeNames();
         for (int i = 0; i < pNames.size(); i++) {
-            print(pTypeNames.get(i), " ", pNames.get(i));
+            print(Environment.getType(pTypeNames.get(i)).getJvmName(), " ", pNames.get(i));
             if (i == pNames.size()-1) continue; // gate
             print(", ");
         }
