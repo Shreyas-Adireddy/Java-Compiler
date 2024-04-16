@@ -33,9 +33,12 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Source ast) {
         print("public class Main {");
         indent++;
-        for (Ast.Global g : ast.getGlobals()) {
-            newline(indent);
-            visit(g);
+        if (!ast.getGlobals().isEmpty()) {
+            newline(0);
+            for (Ast.Global g : ast.getGlobals()) {
+                newline(indent);
+                visit(g);
+            }
         }
         newline(--indent);
 
@@ -46,9 +49,9 @@ public final class Generator implements Ast.Visitor<Void> {
         print("System.exit(new Main().main());");
         newline(--indent);
         print("}");
-        newline(0);
 
         for (Ast.Function f : ast.getFunctions()) {
+            newline(0);
             newline(indent);
             visit(f);
         }

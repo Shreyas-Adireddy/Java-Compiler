@@ -26,14 +26,27 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testSource() {
+        Ast.Global globalX = new Ast.Global("x", "Integer", true, Optional.empty());
+        Ast.Global astGlobalX = init(globalX, ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.INTEGER, true, Environment.NIL)));
+
+        Ast.Global globalY = new Ast.Global("y", "Decimal", false, Optional.of(init(new Ast.Expression.Literal(new BigDecimal("1.0")),ast -> ast.setType(Environment.Type.DECIMAL))));
+        Ast.Global astGlobalY = init(globalY, ast -> ast.setVariable(new Environment.Variable("y", "y", Environment.Type.DECIMAL, false, Environment.NIL)));
+
+        Ast.Global globalZ = new Ast.Global("x", "String", true, Optional.empty());
+        Ast.Global astGlobalZ = init(globalZ, ast -> ast.setVariable(new Environment.Variable("z", "z", Environment.Type.STRING, true, Environment.NIL)));
+
+
         return Stream.of(
-                Arguments.of("Hello, World!",
-                        // FUN main(): Integer DO
-                        //     print("Hello, World!");
-                        //     RETURN 0;
-                        // END
+                Arguments.of("Everything",
+                        // VAR x: Integer;
+                        // VAL y: Decimal;
+                        // VAR z: String;
+                        // FUN f(a: Decimal): Integer DO RETURN x; END
+                        // FUN g(b: String): Decimal DO RETURN y; END
+                        // FUN h(c: Integer): String DO RETURN z; END
+                        // FUN main(): Integer DO END
                         new Ast.Source(
-                                Arrays.asList(),
+                                Arrays.asList(astGlobalX, astGlobalY, astGlobalZ),
                                 Arrays.asList(init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                                         new Ast.Statement.Expression(init(new Ast.Expression.Function("print", Arrays.asList(
                                                 init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
@@ -43,6 +56,10 @@ public class GeneratorTests {
                         ),
                         String.join(System.lineSeparator(),
                                 "public class Main {",
+                                "",
+                                "    int x;",
+                                "    final double y = 1.0;",
+                                "    String z;",
                                 "",
                                 "    public static void main(String[] args) {",
                                 "        System.exit(new Main().main());",
@@ -57,13 +74,10 @@ public class GeneratorTests {
                         )
                 ),
                 Arguments.of("Hello, World!",
-                        // VAR x: Integer;
-                        // VAR y: Decimal;
-                        // VAR z: String;
-                        // FUN f(): Integer DO RETURN x; END
-                        // FUN g(): Decimal DO RETURN y; END
-                        // FUN h(): String DO RETURN z; END
-                        // FUN main(): Integer DO END
+                        // FUN main(): Integer DO
+                        //     print("Hello, World!");
+                        //     RETURN 0;
+                        // END
                         new Ast.Source(
                                 Arrays.asList(),
                                 Arrays.asList(init(new Ast.Function("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
