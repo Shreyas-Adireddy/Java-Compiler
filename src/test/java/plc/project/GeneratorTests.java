@@ -349,6 +349,23 @@ public class GeneratorTests {
         );
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testWhileExpression(String test, Ast.Statement.While ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testWhileExpression() {
+        Ast.Expression cond = init(new Ast.Expression.Access(Optional.empty(), "cond"), ast -> ast.setVariable(new Environment.Variable("cond", "cond", Environment.Type.NIL, true, Environment.NIL)));
+        return Stream.of(
+                Arguments.of("empty",
+                        // WHILE cond DO END
+                        new Ast.Statement.While(cond,Arrays.asList()),
+                        "while (cond) {}"
+                )
+        );
+    }
+
     /**
      * Helper function for tests, using a StringWriter as the output stream.
      */

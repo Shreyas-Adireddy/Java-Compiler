@@ -95,11 +95,14 @@ public final class Generator implements Ast.Visitor<Void> {
         print(") {");
 
         indent++;
-        for (Ast.Statement s : ast.getStatements()) {
+        List<Ast.Statement> statements = ast.getStatements();
+        for (Ast.Statement s : statements) {
             newline(indent);
             visit(s);
         }
-        newline(--indent);
+        indent--;
+        if (!statements.isEmpty()) newline(indent);
+
         print("}");
         return null;
     }
@@ -212,7 +215,8 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(indent);
             visit(s);
         }
-        if (!statements.isEmpty()) newline(--indent);
+        indent--;
+        if (!statements.isEmpty()) newline(indent);
         print("}");
         return null;
     }
