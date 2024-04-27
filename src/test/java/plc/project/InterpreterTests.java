@@ -432,6 +432,12 @@ final class InterpreterTests {
                 Arguments.of("log",
                         new Ast.Expression.Function("log", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
                         "Hello, World!"
+                ),Arguments.of("log 2",
+                        new Ast.Expression.Binary("+",
+                                new Ast.Expression.Function("log", Arrays.asList(new Ast.Expression.Literal("1"))),
+                                        new Ast.Expression.Function("log", Arrays.asList(new Ast.Expression.Literal("2")))
+                        ),
+                        "Hello, World!"
                 ),
                 // function()
                 Arguments.of("Function",

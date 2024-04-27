@@ -91,7 +91,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
-        if (ast.getReceiver().getClass() != Ast.Expression.Access.class)
+        if (!(ast.getReceiver() instanceof Ast.Expression.Access))
             throw new RuntimeException("Assignment to non-access expression");
         try {
             scope = new Scope(scope);
@@ -220,12 +220,16 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             requireType(Boolean.class, rhs);
             return Environment.create(Boolean.logicalAnd((boolean) lhs.getValue(), (boolean) rhs.getValue()));
         } else if (op.equals("||")) {
-            if (requireType(Boolean.class, visit(ast.getLeft())))
-                return visit(ast.getLeft());
-            else if (requireType(Boolean.class, visit(ast.getRight())))
-                return visit(ast.getRight());
-            else
-                return Environment.create(false);
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            if (requireType(Boolean.class, lhs))
+                return lhs;
+            else {
+                Environment.PlcObject rhs = visit(ast.getRight());
+                if (requireType(Boolean.class, rhs))
+                    return rhs;
+                else
+                    return Environment.create(false);
+            }
         } else if (op.equals("==")) {
             if (visit(ast.getLeft()).getValue().equals(visit(ast.getRight()).getValue()))
                 return Environment.create(true);
@@ -241,63 +245,67 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             Environment.PlcObject rhs = visit(ast.getRight());
             if (lhs.getValue() instanceof String || rhs.getValue() instanceof String)
                 return Environment.create("" + lhs.getValue() + rhs.getValue());
-            else if ((visit(ast.getLeft()).getValue() instanceof BigInteger)
-                    && (visit(ast.getRight()).getValue() instanceof BigInteger))
-                return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue())
-                        .add(BigInteger.class.cast(visit(ast.getRight()).getValue())));
-            else if (visit(ast.getLeft()).getValue() instanceof BigDecimal
-                    && visit(ast.getRight()).getValue() instanceof BigDecimal)
-                return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue())
-                        .add(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
+            else if ((lhs.getValue() instanceof BigInteger)
+                    && (rhs.getValue() instanceof BigInteger))
+                return Environment.create(BigInteger.class.cast(lhs.getValue())
+                        .add(BigInteger.class.cast(rhs.getValue())));
+            else if (lhs.getValue() instanceof BigDecimal
+                    && rhs.getValue() instanceof BigDecimal)
+                return Environment.create(BigDecimal.class.cast(lhs.getValue())
+                        .add(BigDecimal.class.cast(rhs.getValue())));
             else
                 throw new RuntimeException("Wrong Operands for +");
         } else if (op.equals("-") || op.equals("*")) {
-            if ((visit(ast.getLeft()).getValue() instanceof BigDecimal ||
-                    visit(ast.getLeft()).getValue() instanceof BigInteger)
-                    && visit(ast.getLeft()).getValue().getClass() == visit(ast.getRight()).getValue().getClass())
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if ((lhs.getValue() instanceof BigDecimal ||
+                    lhs.getValue() instanceof BigInteger))
             {
-                if (visit(ast.getLeft()).getValue() instanceof BigInteger) {
+                if (lhs.getValue() instanceof BigInteger) {
                     if (op.equals("*"))
-                        return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue())
-                                .multiply(BigInteger.class.cast(visit(ast.getRight()).getValue())));
+                        return Environment.create(BigInteger.class.cast(lhs.getValue())
+                                .multiply(BigInteger.class.cast(rhs.getValue())));
                     else
-                        return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue())
-                                .subtract(BigInteger.class.cast(visit(ast.getRight()).getValue())));
+                        return Environment.create(BigInteger.class.cast(lhs.getValue())
+                                .subtract(BigInteger.class.cast(rhs.getValue())));
                 }
-                else if (visit(ast.getLeft()).getValue() instanceof BigDecimal) {
+                else {
                     if (op.equals("*"))
-                        return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue())
-                                .multiply(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
+                        return Environment.create(BigDecimal.class.cast(lhs.getValue())
+                                .multiply(BigDecimal.class.cast(rhs.getValue())));
                     else
-                        return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue())
-                                .subtract(BigDecimal.class.cast(visit(ast.getRight()).getValue())));
-                } else
-                    throw new RuntimeException("Tried to " + op + " but failed");
+                        return Environment.create(BigDecimal.class.cast(lhs.getValue())
+                                .subtract(BigDecimal.class.cast(rhs.getValue())));
+                }
             }else
                 throw new RuntimeException("Tried to " + op + " but failed");
         } else if (op.equals("/")) {
-            if ((visit(ast.getLeft()).getValue() instanceof BigDecimal ||
-                    visit(ast.getLeft()).getValue() instanceof BigInteger)
-                    && visit(ast.getLeft()).getValue().getClass() == visit(ast.getRight()).getValue().getClass())
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if ((lhs.getValue() instanceof BigDecimal ||
+                    lhs.getValue() instanceof BigInteger)
+                    && lhs.getValue().getClass() == rhs.getValue().getClass())
             {
-                if ((visit(ast.getRight()).getValue().equals(BigDecimal.ZERO))
-                        || (visit(ast.getRight()).getValue().equals(BigInteger.ZERO)))
+                if ((lhs.getValue().equals(BigDecimal.ZERO))
+                        || (lhs.getValue().equals(BigInteger.ZERO)))
                     throw new RuntimeException("Dividing by 0");
 
-                if (visit(ast.getLeft()).getValue().getClass() == BigDecimal.class)
-                    return Environment.create(BigDecimal.class.cast(visit(ast.getLeft()).getValue()).divide(BigDecimal.class.cast(visit(ast.getRight()).getValue()), RoundingMode.HALF_EVEN));
+                if (lhs.getValue() instanceof BigDecimal)
+                    return Environment.create(BigDecimal.class.cast(lhs.getValue()).divide(BigDecimal.class.cast(rhs.getValue()), RoundingMode.HALF_EVEN));
                 else
-                    return Environment.create(BigInteger.class.cast(visit(ast.getLeft()).getValue()).divide(BigInteger.class.cast(visit(ast.getRight()).getValue())));
+                    return Environment.create(BigInteger.class.cast(lhs.getValue()).divide(BigInteger.class.cast(rhs.getValue())));
             }
             else
                 throw new RuntimeException("Tried to / but types are wrong");
         } else if (op.equals("<") || op.equals(">")) {
-            if (visit(ast.getLeft()).getValue() instanceof Comparable &&
-                    visit(ast.getLeft()).getValue().getClass() == visit(ast.getRight()).getValue().getClass())
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            requireType(lhs.getValue().getClass(), rhs);
+            if (lhs.getValue() instanceof Comparable)
             {
                 int comparison;
-                Comparable<Object> left = (Comparable<Object>) visit(ast.getLeft()).getValue();
-                Comparable<Object> right = (Comparable<Object>) visit(ast.getRight()).getValue();
+                Comparable<Object> left = (Comparable<Object>) lhs.getValue();
+                Comparable<Object> right = (Comparable<Object>) rhs.getValue();
                 comparison = left.compareTo(right);
                 if (op.equals("<"))
                     return Environment.create(comparison < 0);
