@@ -184,6 +184,28 @@ public class EndToEndGeneratorTests {
         );
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testFunctionDeclaration(String test, String input, String expected) {
+        test(input, expected, Parser::parseFunction);
+    }
+
+    private static Stream<Arguments> testFunctionDeclaration() {
+        return Stream.of(
+                Arguments.of("Square",
+                        // FUN square(num: Decimal): Decimal DO
+                        //    RETURN num * num;
+                        // END
+                        "FUN square(num: Decimal): Decimal DO\n    RETURN num * num;\nEND",
+                        String.join(System.lineSeparator(),
+                                "double square(double num) {",
+                                "    return num * num;",
+                                "}"
+                        )
+                )
+        );
+    }
+
     /**
      * Helper function for tests, using a StringWriter as the output stream.
      */
