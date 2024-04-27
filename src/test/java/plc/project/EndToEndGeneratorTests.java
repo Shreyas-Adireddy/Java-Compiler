@@ -202,6 +202,21 @@ public class EndToEndGeneratorTests {
                                 "    return num * num;",
                                 "}"
                         )
+                ),
+                Arguments.of("Multiple Statements",
+                        // FUN func(x: Integer, y: Decimal, z: String) DO
+                        //     print(x);
+                        //     print(y);
+                        //     print(z);
+                        // END
+                        "FUN func(x: Integer, y: Decimal, z: String) DO\n    print(x);\n    print(y);\n    print(z);\nEND",
+                        String.join(System.lineSeparator(),
+                                "Void func(int x, double y, String z) {",
+                                "    System.out.println(x);",
+                                "    System.out.println(y);",
+                                "    System.out.println(z);",
+                                "}"
+                        )
                 )
         );
     }

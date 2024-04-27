@@ -137,7 +137,7 @@ public final class AnalyzerTests {
                         )),
                         ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
-                Arguments.of("Return Type Mismatch 2",
+                Arguments.of("Return Type Mismatch",
                         // FUN increment(num: Integer): Decimal DO RETURN num + 1; END
                         new Ast.Function("increment", Arrays.asList("num"), Arrays.asList("Integer"), Optional.of("Decimal"), Arrays.asList(
                                 new Ast.Statement.Expression(

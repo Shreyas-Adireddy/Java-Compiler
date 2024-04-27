@@ -75,22 +75,19 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 args -> Environment.NIL));
 
         ast.setFunction(func);
-        try{
-            scope = new Scope(scope);
-            for (int i = 0; i < argsTypes.size(); i++) {
-                scope.defineVariable(ast.getParameters().get(i),
-                        ast.getParameters().get(i),
-                        Environment.getType(ast.getParameterTypeNames().get(i)),
-                        true,
-                        Environment.NIL);
-            }
-        }finally {
-            scope = scope.getParent();
+        scope = new Scope(scope);
+        for (int i = 0; i < argsTypes.size(); i++) {
+            scope.defineVariable(ast.getParameters().get(i),
+                    ast.getParameters().get(i),
+                    Environment.getType(ast.getParameterTypeNames().get(i)),
+                    true,
+                    Environment.NIL);
         }
         function = ast;
         for (Ast.Statement statement: ast.getStatements())
             visit(statement);
         function = null;
+        scope = scope.getParent();
         return null;
     }
 
