@@ -250,13 +250,13 @@ public final class Parser {
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        while (!peek("END") && !peek("ELSE") && !peek("DEFAULT")) {
+        while (!peek("END") && !peek("ELSE") && !peek("DEFAULT") && !peek("CASE")) {
             statements.add(parseStatement());
         }
         if (!tokens.has(0)){
             throw new ParseException("Invalid Token", tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length());
         }
-        if (!peek("END") && !peek("ELSE") && !peek("DEFAULT")){
+        if (!peek("END") && !peek("ELSE") && !peek("DEFAULT") && !peek("CASE")){
             throw new ParseException("Invalid Token", tokens.get(0).getIndex());
         }
         return statements;

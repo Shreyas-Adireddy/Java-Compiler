@@ -143,6 +143,26 @@ public class EndToEndGeneratorTests {
                                 "        System.out.println(\"no\");",
                                 "}"
                         )
+                ),
+                Arguments.of("Switch Multiple",
+                        // SWITCH num
+                        // CASE 1:
+                        //     print("num is 1.");
+                        // CASE 2:
+                        //     print("num is 2.");
+                        // DEFAULT
+                        //     print("num is greater than 2.");
+                        // END
+                        "SWITCH num\nCASE 1:\n    print(\"num is 1.\");\nCASE 2:\n    print(\"num is 2.\");\nDEFAULT\n    print(\"num is greater than 2.\");\nEND",
+                        String.join(System.lineSeparator(),
+                                "switch ('y') {",
+                                "    case 'y':",
+                                "        System.out.println(\"yes\");",
+                                "        break;",
+                                "    default:",
+                                "        System.out.println(\"no\");",
+                                "}"
+                        )
                 )
         );
     }
