@@ -377,6 +377,22 @@ public class GeneratorTests {
         );
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testLiteralExpression(String test, Ast.Expression.Literal ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testLiteralExpression() {
+        return Stream.of(
+                Arguments.of("Literal Integer",
+                        // 1
+                        init(new Ast.Expression.Literal(BigDecimal.ONE), ast -> ast.setType(Environment.Type.INTEGER)),
+                        "1"
+                )
+        );
+    }
+
     /**
      * Helper function for tests, using a StringWriter as the output stream.
      */
