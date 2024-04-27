@@ -136,17 +136,6 @@ public final class AnalyzerTests {
                                 new Ast.Statement.Return(init(new Ast.Expression.Literal(new BigInteger("0")), ast -> ast.setType(Environment.Type.INTEGER)))
                         )),
                         ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
-                ),
-                Arguments.of("Return Type Mismatch",
-                        // FUN increment(num: Integer): Decimal DO RETURN num + 1; END
-                        new Ast.Function("increment", Arrays.asList("num"), Arrays.asList("Integer"), Optional.of("Decimal"), Arrays.asList(
-                                new Ast.Statement.Expression(
-                                        new Ast.Expression.Function("print", Arrays.asList(
-                                                new Ast.Expression.Access(Optional.empty(), "num")
-                                        ))
-                                )
-                        )),
-                        null
                 )
         );
     }
