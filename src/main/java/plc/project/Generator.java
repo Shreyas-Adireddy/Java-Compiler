@@ -236,6 +236,8 @@ public final class Generator implements Ast.Visitor<Void> {
             print("\"", lit, "\"");
         else if (lit instanceof Character)
             print("'", lit, "'");
+        else if (ast.getType() == Environment.Type.NIL)
+            print("null");
         else
             print(lit);
         return null;

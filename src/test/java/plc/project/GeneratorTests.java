@@ -389,6 +389,11 @@ public class GeneratorTests {
                         // 1
                         init(new Ast.Expression.Literal(BigDecimal.ONE), ast -> ast.setType(Environment.Type.INTEGER)),
                         "1"
+                ),
+                Arguments.of("Literal NIL",
+                        // NIL
+                        init(new Ast.Expression.Literal(Environment.NIL), ast -> ast.setType(Environment.Type.NIL)),
+                        "null"
                 )
         );
     }
