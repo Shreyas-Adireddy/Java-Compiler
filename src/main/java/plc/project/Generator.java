@@ -251,6 +251,11 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Binary ast) {
+        if (ast.getOperator().equals("^")) {
+            print("Math.pow(", ast.getLeft(), ", ",  ast.getRight(), ")");
+            return null;
+        }
+
         visit(ast.getLeft());
         print(" ", ast.getOperator(), " ");
         visit(ast.getRight());
@@ -268,8 +273,13 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expression.Function ast) {
         print(ast.getFunction().getJvmName(), "(");
-        for (Ast.Expression exp : ast.getArguments())
+        for (int i = 0; i < ast.getArguments().size(); i++){
+            Ast.Expression exp = ast.getArguments().get(i);
             visit(exp);
+            if (i != ast.getArguments().size() - 1) {
+                print(", ");
+            }
+        }
         print(")");
         return null;
     }

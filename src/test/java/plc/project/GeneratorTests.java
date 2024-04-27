@@ -273,6 +273,17 @@ public class GeneratorTests {
                                 init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
                         ), ast -> ast.setType(Environment.Type.STRING)),
                         "\"Ben\" + 10"
+                ),
+                Arguments.of("Power",
+                        // 2 ^ 3 + 1
+                        init(new Ast.Expression.Binary("+",
+                                init(new Ast.Expression.Binary("^",
+                                        init(new Ast.Expression.Literal(BigInteger.TWO), ast -> ast.setType(Environment.Type.INTEGER)),
+                                        init(new Ast.Expression.Literal(BigInteger.valueOf(3)), ast -> ast.setType(Environment.Type.INTEGER))
+                                ), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                        ), ast -> ast.setType(Environment.Type.INTEGER)),
+                        "Math.pow(2, 3) + 1"
                 )
         );
     }
