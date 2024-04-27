@@ -198,7 +198,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Statement.Return ast) {
         visit(ast.getValue());
-        requireAssignable(Environment.getType(function.getReturnTypeName().get()), ast.getValue().getType());
+        Environment.Type ret = Environment.getType(function.getReturnTypeName().orElse("Nil"));
+        requireAssignable(ret, ast.getValue().getType());
         return null;
     }
 
