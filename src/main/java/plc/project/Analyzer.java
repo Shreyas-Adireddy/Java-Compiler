@@ -85,7 +85,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                         Environment.NIL);
             }
         }finally {
-            scope = scope;
+            scope = scope.getParent();
         }
         function = ast;
         for (Ast.Statement statement: ast.getStatements())
